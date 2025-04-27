@@ -1,0 +1,19 @@
+spring:
+  application:
+    name: taskolotl
+  # In-memory H2 database for prototyping
+  datasource:
+    url: jdbc:h2:mem:testdb;MODE=MSSQLServer
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: password
+  # H2 console enabled to interact with database contents
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+  # Create tables on start, drop tables on shutdown, run SQL scripts after Hibernate creates schema
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    defer-datasource-initialization: true

@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+  <root level="INFO">
+    <appender-ref ref="CONSOLE"/>
+  </root>
+  <!--  Reduce output for common loggers -->
+  <logger name="org.springframework" level="WARN"/>
+  <logger name="org.hibernate" level="WARN"/>
+  <logger name="com.zaxxer.hikari" level="WARN"/>
+  <logger name="org.apache.catalina" level="WARN"/>
+
+  <!-- Legible logs for local development -->
+  <springProfile name="dev,default">
+    <!-- Spring Boot defaults -->
+    <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+      <encoder>
+        <pattern>${CONSOLE_LOG_PATTERN}</pattern>
+      </encoder>
+    </appender>
+  </springProfile>
+
+  <!-- JSON logs for DataDog supported environments -->
+  <springProfile name="prod">
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+      <encoder>
+        <!-- Use MDC keys to add to logs -->
+        <!-- "CorrelationID", "dd.trace_id", and "dd.span_id" for Datadog tracing -->
+        <!-- "json" to log json without newlines in compliance with Datadog -->
+        <pattern>{"date": "%d{yyyy-MM-dd HH:mm:ss.SSSSSS}", "CorrelationID": "%X{CorrelationID}", "dd.trace_id": "%X{dd.trace_id}", "dd.span_id": "%X{dd.span_id}", "level": "%level", "class": "%class", "message": "%replace(%message){'[\r\n]+',' '}", "json": "%replace(%X{json:-""}){'[\r\n]+',' '}", "exception": "%replace(%exception){'[\r\n]+',' '}%nopexception"}%n</pattern>
+      </encoder>
+    </appender>
+  </springProfile>
+</configuration>
