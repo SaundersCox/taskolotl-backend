@@ -14,7 +14,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 import lombok.experimental.SuperBuilder;
-import org.hibernate.annotations.GenericGenerator;
 
 /**
  * Base abstract entity class that provides common fields and functionality for all entities.
@@ -84,13 +83,17 @@ public abstract class BaseEntity {
    */
   @Override
   public boolean equals(Object o) {
+    // Same instance check (handles null ID case and optimization)
     if (this == o) {
       return true;
     }
+    // Type check (ensures we're comparing entities of the same type)
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
+    // Cast to BaseEntity to access ID
     BaseEntity that = (BaseEntity) o;
+    // Compare IDs (handles both null and non-null IDs)
     return Objects.equals(getId(), that.getId());
   }
 

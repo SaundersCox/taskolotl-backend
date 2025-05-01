@@ -1,5 +1,7 @@
 package com.saunderscox.taskolotl.dto;
 
+import com.saunderscox.taskolotl.entity.BoardType;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
@@ -13,13 +15,15 @@ import lombok.experimental.SuperBuilder;
 @AllArgsConstructor
 @SuperBuilder
 @EqualsAndHashCode(callSuper = true)
-public class UserResponseDto extends BaseDto {
+public class BoardResponseDto extends BaseDto {
 
-  private String username;
-  private String email;
-  private String profileDescription;
-  private String profilePictureUrl;
-  private String oauthProvider;
-  private Set<UUID> skillIds;
+  private String title;
+  private BoardType boardType;
+  private String description;
+  private boolean visible;
+  private Set<UUID> ownerIds;
+  private Set<UUID> memberIds;
+  private List<UUID> boardItemIds;
   private Set<UUID> roleIds;
+  private Set<UUID> skillIds;
 }

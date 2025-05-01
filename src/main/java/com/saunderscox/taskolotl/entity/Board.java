@@ -13,8 +13,10 @@ import jakarta.persistence.ManyToMany;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OrderBy;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotBlank;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import lombok.AllArgsConstructor;
@@ -22,6 +24,7 @@ import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 
 /**
@@ -32,12 +35,14 @@ import lombok.experimental.SuperBuilder;
 @Table(name = "board", indexes = {@Index(name = "idx_board_title", columnList = "title")})
 @NoArgsConstructor
 @AllArgsConstructor
-@SuperBuilder // Changed from @Builder to @SuperBuilder for inheritance compatibility
+@SuperBuilder
 @Getter
 @EqualsAndHashCode(callSuper = true)
 public class Board extends BaseEntity {
 
   @Column(nullable = false, length = 100)
+  @NotBlank
+  @Setter
   private String title;
 
   @Enumerated(EnumType.STRING)
@@ -45,12 +50,14 @@ public class Board extends BaseEntity {
   private BoardType boardType;
 
   @Column(length = 500)
+  @Setter
   private String description;
 
   /**
    * When true, the board is only visible to owners and members.
    */
-  private boolean isPrivate;
+  @Setter
+  private boolean visible;
 
   @ManyToMany(fetch = FetchType.LAZY)
   @JoinTable(name = "board_owners", joinColumns = @JoinColumn(name = "board_id"), inverseJoinColumns = @JoinColumn(name = "user_id"))
@@ -60,7 +67,7 @@ public class Board extends BaseEntity {
   @ManyToMany(fetch = FetchType.LAZY)
   @JoinTable(name = "board_members", joinColumns = @JoinColumn(name = "board_id"), inverseJoinColumns = @JoinColumn(name = "user_id"))
   @Builder.Default
-  private Set<User> members = new HashSet<>();
+  private Set<User> members = new LinkedHashSet<>();
 
   /**
    * Items are ordered by their position field. They are fully owned by the board and will be

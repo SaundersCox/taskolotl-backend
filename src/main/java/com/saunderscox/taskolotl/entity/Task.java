@@ -9,6 +9,7 @@ import jakarta.persistence.ManyToOne;
 import java.time.Duration;
 import java.time.Instant;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -32,29 +33,32 @@ public class Task extends BoardItem {
 
   @Enumerated(EnumType.STRING)
   @Column(name = "task_stage", nullable = false)
+  @Builder.Default
   @Setter
   private TaskStage taskStage = TaskStage.BACKLOG;
 
   @Setter
   private Instant dueDate;
 
-  @Setter
   @Column(name = "completed_at")
+  @Setter
   private Instant completedAt;
 
-  @Setter
   @Column(name = "estimated_hours")
+  @Setter
   private Float estimatedHours;
 
-  @Setter
   @Column(name = "actual_hours")
+  @Setter
   private Float actualHours;
 
-  @Setter
   @ManyToOne
+  @Setter
   private User assignee;
 
   @Column(name = "is_important")
+
+  @Builder.Default
   @Setter
   private boolean important = false;
 

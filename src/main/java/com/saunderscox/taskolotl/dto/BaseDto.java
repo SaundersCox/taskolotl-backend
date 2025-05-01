@@ -1,17 +1,19 @@
 package com.saunderscox.taskolotl.dto;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import java.time.Instant;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
-import lombok.Getter;
+import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
 @SuperBuilder
-@Getter
-public abstract class BaseResponseDto {
+@JsonInclude(JsonInclude.Include.NON_NULL)
+public abstract class BaseDto {
 
   private UUID id;
   private Instant createdAt;

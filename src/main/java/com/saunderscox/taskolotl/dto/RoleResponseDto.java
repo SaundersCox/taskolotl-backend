@@ -13,13 +13,12 @@ import lombok.experimental.SuperBuilder;
 @AllArgsConstructor
 @SuperBuilder
 @EqualsAndHashCode(callSuper = true)
-public class UserResponseDto extends BaseDto {
+public class RoleResponseDto extends BaseDto {
 
-  private String username;
-  private String email;
-  private String profileDescription;
-  private String profilePictureUrl;
-  private String oauthProvider;
-  private Set<UUID> skillIds;
-  private Set<UUID> roleIds;
+  private String name;
+  private String description;
+  private String hub;
+  private String team;
+  private Set<UUID> userIds;
+  private Set<UUID> boardIds;
 }

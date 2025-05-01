@@ -6,7 +6,6 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.Index;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.Table;
-import jakarta.validation.constraints.NotBlank;
 import java.util.HashSet;
 import java.util.Set;
 import lombok.AllArgsConstructor;
@@ -14,6 +13,7 @@ import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
 /**
  * Represents a professional role within a company or organization. Roles define job positions,
@@ -25,23 +25,16 @@ import lombok.NoArgsConstructor;
 })
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
+@SuperBuilder
 @Getter
 @EqualsAndHashCode(callSuper = true)
 public class Role extends BaseEntity {
 
-  @NotBlank
-  @Column(nullable = false, length = 100)
+  @Column(nullable = false, unique = true, length = 100)
   private String name;
 
   @Column(length = 500)
   private String description;
-
-  @Column(length = 100)
-  private String hub;
-
-  @Column(length = 100)
-  private String team;
 
   @ManyToMany(fetch = FetchType.LAZY)
   @Builder.Default

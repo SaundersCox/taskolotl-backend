@@ -1,6 +1,22 @@
 spring:
   application:
     name: taskolotl
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${GOOGLE_CLIENT}
+            client-secret: ${GOOGLE_SECRET}
+            scope:
+              - email
+              - profile
+  # In-memory Bucket4j + Caffeine caching
+  cache:
+    cache-names:
+      - rate-limit-buckets
+    caffeine:
+      spec: maximumSize=100000,expireAfterAccess=3600s
   # In-memory H2 database for prototyping
   datasource:
     url: jdbc:h2:mem:testdb;MODE=MSSQLServer
@@ -14,6 +30,59 @@ spring:
       path: /h2-console
   # Create tables on start, drop tables on shutdown, run SQL scripts after Hibernate creates schema
   jpa:
+    open-in-view: false
     hibernate:
       ddl-auto: create-drop
     defer-datasource-initialization: true
+
+# Makes this project entirely under plmcty.com/taskolotl
+server:
+  servlet:
+    context-path: /taskolotl
+
+# Actuator
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      show-details: ALWAYS
+
+bucket4j:
+  enabled: true
+  filters:
+    - cache-name: rate-limit-buckets
+      url: /api.*
+      strategy: first
+      http-response-body: "{ \"status\": 429, \"error\": \"Too Many Requests\", \"message\": \"You have exhausted your API Request Quota\" }"
+      rate-limits:
+        - cache-key: "getHeader('X-api-key')"
+          execute-condition: "getHeader('X-api-key').startsWith('PX001-')"
+          bandwidths:
+            - capacity: 100
+              time: 1
+              unit: hours
+        - cache-key: "getHeader('X-api-key')"
+          execute-condition: "getHeader('X-api-key').startsWith('BX001-')"
+          bandwidths:
+            - capacity: 40
+              time: 1
+              unit: hours
+        - cache-key: "getHeader('X-api-key')"
+          bandwidths:
+            - capacity: 20
+              time: 1
+              unit: hours
+
+
+# Custom app properties
+app:
+  security:
+    cors:
+      allowed-origins:
+        localhost:4200
+    jwt:
+      secret: ${JWT_SECRET}
+      expiration-ms: ${JWT_EXPIRATION}

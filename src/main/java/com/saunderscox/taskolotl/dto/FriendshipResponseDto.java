@@ -1,6 +1,6 @@
 package com.saunderscox.taskolotl.dto;
 
-import java.util.Set;
+import com.saunderscox.taskolotl.entity.FriendshipStatus;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -13,13 +13,11 @@ import lombok.experimental.SuperBuilder;
 @AllArgsConstructor
 @SuperBuilder
 @EqualsAndHashCode(callSuper = true)
-public class UserResponseDto extends BaseDto {
+public class FriendshipResponseDto extends BaseDto {
 
-  private String username;
-  private String email;
-  private String profileDescription;
-  private String profilePictureUrl;
-  private String oauthProvider;
-  private Set<UUID> skillIds;
-  private Set<UUID> roleIds;
+  private UUID selfId;
+  private UUID targetId;
+  private FriendshipStatus friendshipStatus;
+  private Boolean blocked;
+  private String notes;
 }

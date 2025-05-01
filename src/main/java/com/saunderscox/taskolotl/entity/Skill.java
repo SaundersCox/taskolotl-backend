@@ -32,12 +32,13 @@ import lombok.experimental.SuperBuilder;
 @AllArgsConstructor
 @SuperBuilder
 @Getter
-@EqualsAndHashCode(callSuper = true)
-@ToString(callSuper = true)
+@EqualsAndHashCode(onlyExplicitlyIncluded = true, callSuper = true)
+@ToString(onlyExplicitlyIncluded = true, callSuper = true)
 public class Skill extends BaseEntity {
 
-  @Column(nullable = false, length = 100)
+  @Column(nullable = false, unique = true, length = 100)
   @Setter
+  @ToString.Include
   private String name;
 
   @Column(length = 500)

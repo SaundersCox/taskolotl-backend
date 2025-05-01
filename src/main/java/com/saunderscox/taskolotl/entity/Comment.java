@@ -8,8 +8,6 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.Index;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
 import java.util.HashSet;
 import java.util.Set;
 import lombok.AllArgsConstructor;
@@ -18,6 +16,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.experimental.SuperBuilder;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
@@ -32,8 +31,8 @@ import org.hibernate.annotations.OnDeleteAction;
 })
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
 @Getter
+@SuperBuilder
 @EqualsAndHashCode(callSuper = true)
 public class Comment extends BaseEntity {
 
@@ -52,8 +51,6 @@ public class Comment extends BaseEntity {
   @Setter
   private BoardItem boardItem;
 
-  @NotBlank(message = "Comment description cannot be empty")
-  @Size(min = 1, max = 1000, message = "Comment must be between 1 and 1000 characters")
   @Column(nullable = false, length = 1000)
   @Setter
   private String description;
@@ -67,6 +64,7 @@ public class Comment extends BaseEntity {
       name = "comment_tags",
       indexes = @Index(name = "idx_comment_tags", columnList = "tag")
   )
+  @Builder.Default
   private Set<String> tags = new HashSet<>();
 
   public void setTags(Set<String> tags) {

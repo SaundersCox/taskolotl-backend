@@ -1,6 +1,7 @@
 package com.saunderscox.taskolotl.dto;
 
-import java.util.Set;
+import com.saunderscox.taskolotl.entity.TaskStage;
+import java.time.Instant;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -13,13 +14,11 @@ import lombok.experimental.SuperBuilder;
 @AllArgsConstructor
 @SuperBuilder
 @EqualsAndHashCode(callSuper = true)
-public class UserResponseDto extends BaseDto {
+public class TaskCreateRequestDto extends BoardItemCreateRequestDto {
 
-  private String username;
-  private String email;
-  private String profileDescription;
-  private String profilePictureUrl;
-  private String oauthProvider;
-  private Set<UUID> skillIds;
-  private Set<UUID> roleIds;
+  private TaskStage taskStage;
+  private Instant dueDate;
+  private Float estimatedHours;
+  private UUID assigneeId;
+  private boolean important;
 }

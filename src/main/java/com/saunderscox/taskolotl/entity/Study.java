@@ -7,6 +7,7 @@ import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.ManyToOne;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -30,6 +31,7 @@ public class Study extends BoardItem {
 
   @Enumerated(EnumType.STRING)
   @Column(name = "study_stage", nullable = false)
+  @Builder.Default
   @Setter
   private StudyStage studyStage = StudyStage.UNAWARE;
 

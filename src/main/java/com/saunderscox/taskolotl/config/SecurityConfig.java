@@ -1,49 +1,93 @@
 package com.saunderscox.taskolotl.config;
 
-import static org.springframework.security.config.Customizer.withDefaults;
-
-import java.util.Arrays;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.saunderscox.taskolotl.service.CustomOAuth2UserService;
+import com.saunderscox.taskolotl.service.JwtService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
-import org.springframework.security.config.web.server.ServerHttpSecurity;
-import org.springframework.security.config.web.server.ServerHttpSecurity.CsrfSpec;
-import org.springframework.security.web.server.SecurityWebFilterChain;
-import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.reactive.CorsConfigurationSource;
-import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 
+/**
+ * Configuration class for setting up Spring Security, including OAuth2 login and JWT token
+ * handling.
+ */
 @Configuration
-@EnableWebFluxSecurity
+@EnableWebSecurity
+@RequiredArgsConstructor
 public class SecurityConfig {
 
+  private final CustomOAuth2UserService customOAuth2UserService;
+  private final JwtService jwtService;
+  private final ObjectMapper objectMapper;
+  private final JwtAuthenticationFilter jwtAuthenticationFilter;
+
+  @Value("${spring.profiles.active:}")
+  private String activeProfile;
+
+  /**
+   * Configures the security filter chain with custom rules for OAuth2 login and JWT token
+   * handling.
+   *
+   * @param http the HttpSecurity object to configure
+   * @return a SecurityFilterChain instance
+   */
   @Bean
-  public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {
-    return http
-        .csrf(CsrfSpec::disable)  // Consider carefully before disabling in production
-        .authorizeExchange(exchanges -> exchanges
-            .pathMatchers("/public/**").permitAll()
-            .pathMatchers("/api/**").authenticated()
-            .anyExchange().authenticated()
+  public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+
+    if (activeProfile.contains("dev")) {
+      http.authorizeHttpRequests(auth ->
+              auth.requestMatchers("/h2-console/**").permitAll())
+          .headers(headers ->
+              headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin)
+          );
+    }
+
+    http
+        .csrf(csrf -> csrf
+            .ignoringRequestMatchers("/api/**")
+            .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()))
+        .sessionManagement(session ->
+            session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+        .authorizeHttpRequests(auth -> auth.
+            requestMatchers("/api/public/**", "/actuator/health/**", "/", "/error",
+                "/login/**", "/oauth2/**")
+            .permitAll()
+            .requestMatchers("/api/admin/**").hasRole("ADMIN")
+            .anyRequest().authenticated()
         )
-        .httpBasic(withDefaults())
-        .formLogin(withDefaults())
-        .build();
+        .oauth2Login(oauth2 -> oauth2
+            .userInfoEndpoint(userInfo ->
+                userInfo.userService(customOAuth2UserService))
+            .successHandler(getSuccessHandler()))
+        .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+    return http.build();
   }
 
-  @Bean
-  CorsConfigurationSource corsConfigurationSource() {
-    CorsConfiguration configuration = new CorsConfiguration();
-    configuration.setAllowedOrigins(Arrays.asList("https://trusted-domain.com"));
-    configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-    configuration.setAllowedHeaders(
-        Arrays.asList("Authorization", "Content-Type", "X-Requested-With"));
-    configuration.setExposedHeaders(Arrays.asList("X-Total-Count", "Link"));
-    configuration.setAllowCredentials(true);
-    configuration.setMaxAge(3600L);
+  /**
+   * Creates a custom authentication success handler for OAuth2 login that returns a JSON response
+   * containing the JWT token.
+   */
+  private AuthenticationSuccessHandler getSuccessHandler() {
+    return (request, response, authentication) -> {
+      response.setContentType("application/json");
 
-    UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-    source.registerCorsConfiguration("/**", configuration);
-    return source;
+      String token = jwtService.generateToken(authentication);
+      long expirationSeconds = jwtService.getExpirationMs() / 1000;
+      ObjectNode value = objectMapper.createObjectNode()
+          .put("access_token", token)
+          .put("token_type", "Bearer")
+          .put("expires_in", expirationSeconds);
+      objectMapper.writeValue(response.getWriter(), value);
+    };
   }
 }

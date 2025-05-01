@@ -3,9 +3,16 @@ package com.saunderscox.taskolotl.entity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
+import jakarta.persistence.Index;
+import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToMany;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
 import java.util.HashSet;
 import java.util.Set;
 import lombok.AllArgsConstructor;
@@ -15,16 +22,20 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import lombok.experimental.SuperBuilder;
 import org.hibernate.validator.constraints.URL;
 
 @Entity
-@Table(name = "users")
+@Table(name = "users", indexes = {
+    @Index(name = "idx_user_username", columnList = "username"),
+    @Index(name = "idx_user_email", columnList = "email"),
+    @Index(name = "idx_user_oauth_id", columnList = "oauth_id")
+})
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
+@SuperBuilder
 @Getter
-@EqualsAndHashCode(callSuper = true)
-@ToString(onlyExplicitlyIncluded = true)
+@EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
 public class User extends BaseEntity {
 
   @Column(nullable = false, unique = true, length = 50)
@@ -32,16 +43,29 @@ public class User extends BaseEntity {
   @ToString.Include
   private String username;
 
-  @Column(nullable = false, unique = true)
+  @Column(nullable = false, unique = true, length = 255)
+  @Email(message = "Please provide a valid email address")
+  @NotBlank(message = "Email is required")
+  private String email;
+
+  @Column(unique = true, length = 100)
   private String oauthId;
 
+  @Column(length = 100)
+  private String oauthProvider;
+
   @Setter
-  private String profileDescription = "";
+  private String profileDescription;
 
   @URL
   @Column(length = 255)
   @Setter
-  private String profilePicture = "";
+  private String profilePictureUrl;
+
+  @ManyToOne
+  @JoinColumn(name = "team_id")
+  @Setter
+  private Team team;
 
   @OneToMany(mappedBy = "self", fetch = FetchType.LAZY)
   @Builder.Default
@@ -191,4 +215,11 @@ public class User extends BaseEntity {
     return false;
   }
 
+  @PrePersist
+  @PreUpdate
+  private void prepareEmail() {
+    if (email != null) {
+      email = email.toLowerCase();
+    }
+  }
 }
