@@ -76,6 +76,9 @@ bucket4j:
               time: 1
               unit: hours
 
+info:
+  app:
+    version: @project.version@
 
 # Custom app properties
 app:
