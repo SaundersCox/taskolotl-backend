@@ -18,11 +18,20 @@ import java.util.Set;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mapstruct.factory.Mappers;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
+@ExtendWith(SpringExtension.class)
+@SpringBootTest
 class UserMapperTest {
 
+  @Autowired
   private UserMapper userMapper;
+
   private User user;
   private UUID userId;
   private UUID skillId1;
@@ -32,7 +41,6 @@ class UserMapperTest {
 
   @BeforeEach
   void setUp() {
-    userMapper = Mappers.getMapper(UserMapper.class);
 
     // Setup test data
     userId = UUID.randomUUID();
@@ -57,6 +65,7 @@ class UserMapperTest {
 
     // Create user
     user = User.builder()
+        .id(userId)
         .username("testuser")
         .email("test@example.com")
         .profileDescription("Test description")
@@ -65,15 +74,6 @@ class UserMapperTest {
         .skills(skills)
         .roles(roles)
         .build();
-
-    // Set ID using reflection since it's in the parent class
-    try {
-      java.lang.reflect.Field idField = user.getClass().getSuperclass().getDeclaredField("id");
-      idField.setAccessible(true);
-      idField.set(user, userId);
-    } catch (Exception e) {
-      throw new RuntimeException("Failed to set user ID", e);
-    }
   }
 
   @Test
@@ -82,21 +82,24 @@ class UserMapperTest {
     UserResponseDto dto = userMapper.toResponseDto(user);
 
     // Then
-    assertThat(dto).isNotNull();
-    assertThat(dto.getId()).isEqualTo(userId);
-    assertThat(dto.getUsername()).isEqualTo("testuser");
-    assertThat(dto.getEmail()).isEqualTo("test@example.com");
-    assertThat(dto.getProfileDescription()).isEqualTo("Test description");
-    assertThat(dto.getProfilePictureUrl()).isEqualTo("https://example.com/pic.jpg");
-    assertThat(dto.getOauthProvider()).isEqualTo("google");
+    assertThat(dto)
+        .isNotNull()
+        .satisfies(d -> {
+          assertThat(d.getId()).isEqualTo(userId);
+          assertThat(d.getUsername()).isEqualTo("testuser");
+          assertThat(d.getEmail()).isEqualTo("test@example.com");
+          assertThat(d.getProfileDescription()).isEqualTo("Test description");
+          assertThat(d.getProfilePictureUrl()).isEqualTo("https://example.com/pic.jpg");
+          assertThat(d.getOauthProvider()).isEqualTo("google");
 
-    // Check skill IDs
-    assertThat(dto.getSkillIds()).hasSize(2);
-    assertThat(dto.getSkillIds()).contains(skillId1, skillId2);
+          assertThat(d.getSkillIds())
+              .hasSize(2)
+              .contains(skillId1, skillId2);
 
-    // Check role IDs
-    assertThat(dto.getRoleIds()).hasSize(2);
-    assertThat(dto.getRoleIds()).contains(roleId1, roleId2);
+          assertThat(d.getRoleIds())
+              .hasSize(2)
+              .contains(roleId1, roleId2);
+        });
   }
 
   @Test
@@ -112,9 +115,12 @@ class UserMapperTest {
     List<UserResponseDto> dtos = userMapper.toResponseDtoList(users);
 
     // Then
-    assertThat(dtos).hasSize(2);
-    assertThat(dtos.get(0).getUsername()).isEqualTo("testuser");
-    assertThat(dtos.get(1).getUsername()).isEqualTo("testuser2");
+    assertThat(dtos)
+        .hasSize(2)
+        .satisfies(list -> {
+          assertThat(list.get(0).getUsername()).isEqualTo("testuser");
+          assertThat(list.get(1).getUsername()).isEqualTo("testuser2");
+        });
   }
 
   @Test
@@ -130,28 +136,49 @@ class UserMapperTest {
     User result = userMapper.toEntity(createDto);
 
     // Then
-    assertThat(result).isNotNull();
-    assertThat(result.getUsername()).isEqualTo("newuser");
-    assertThat(result.getEmail()).isEqualTo("new@example.com");
-    assertThat(result.getOauthId()).isEqualTo("oauth123");
+    assertThat(result)
+        .isNotNull()
+        .satisfies(u -> {
+          assertThat(u.getUsername()).isEqualTo("newuser");
+          assertThat(u.getEmail()).isEqualTo("new@example.com");
+          assertThat(u.getOauthId()).isEqualTo("oauth123");
+        });
   }
 
-  @Test
-  void updateEntityFromDto_shouldUpdateOnlyProvidedFields() {
+  @ParameterizedTest
+  @CsvSource({
+      "updateduser, Updated description, https://updated.example.com/pic.jpg",
+      "updateduser, , ",
+      ", Updated description, ",
+      ", , https://updated.example.com/pic.jpg"
+  })
+  void updateEntityFromDto_shouldUpdateOnlyProvidedFields(
+      String username, String description, String pictureUrl) {
     // Given
+    String originalUsername = user.getUsername();
+    String originalDescription = user.getProfileDescription();
+    String originalPictureUrl = user.getProfilePictureUrl();
+
     UserUpdateRequestDto updateDto = UserUpdateRequestDto.builder()
-        .username("updateduser")
-        .profileDescription("Updated description")
+        .username(username)
+        .profileDescription(description)
+        .profilePictureUrl(pictureUrl)
         .build();
 
     // When
     userMapper.updateEntityFromDto(updateDto, user);
 
     // Then
-    assertThat(user.getUsername()).isEqualTo("updateduser");
-    assertThat(user.getProfileDescription()).isEqualTo("Updated description");
-    assertThat(user.getProfilePictureUrl()).isEqualTo("https://example.com/pic.jpg"); // Unchanged
-    assertThat(user.getEmail()).isEqualTo("test@example.com"); // Unchanged
+    assertThat(user)
+        .satisfies(u -> {
+          assertThat(u.getUsername()).isEqualTo(username != null ? username : originalUsername);
+          assertThat(u.getProfileDescription()).isEqualTo(
+              description != null ? description : originalDescription);
+          assertThat(u.getProfilePictureUrl()).isEqualTo(
+              pictureUrl != null ? pictureUrl : originalPictureUrl);
+          // Verify email wasn't changed
+          assertThat(u.getEmail()).isEqualTo("test@example.com");
+        });
   }
 
   @Test
@@ -160,8 +187,9 @@ class UserMapperTest {
     Set<UUID> skillIds = userMapper.getSkillIds(user);
 
     // Then
-    assertThat(skillIds).hasSize(2);
-    assertThat(skillIds).contains(skillId1, skillId2);
+    assertThat(skillIds)
+        .hasSize(2)
+        .contains(skillId1, skillId2);
   }
 
   @Test
@@ -170,7 +198,8 @@ class UserMapperTest {
     Set<UUID> roleIds = userMapper.getRoleIds(user);
 
     // Then
-    assertThat(roleIds).hasSize(2);
-    assertThat(roleIds).contains(roleId1, roleId2);
+    assertThat(roleIds)
+        .hasSize(2)
+        .contains(roleId1, roleId2);
   }
 }

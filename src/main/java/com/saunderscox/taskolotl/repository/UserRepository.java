@@ -55,10 +55,12 @@ public interface UserRepository extends JpaRepository<User, UUID> {
   /**
    * Search for users by username or email (case insensitive)
    *
-   * @param query    The search term
+   * @param username The username search term
+   * @param email    The email search term
    * @param pageable Pageable object for pagination
    * @return A Page of matching users
    */
-  Page<User> findByUsernameContainingIgnoreCaseOrEmailContainingIgnoreCase(String query,
+  Page<User> findByUsernameContainingIgnoreCaseOrEmailContainingIgnoreCase(String username,
+      String email,
       Pageable pageable);
 }

@@ -12,8 +12,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -44,8 +42,8 @@ public class UserController {
 
   @GetMapping("/me")
   public ResponseEntity<UserResponseDto> getCurrentUser() {
-    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-    return ResponseEntity.ok(userService.getUserByEmail(authentication.getName()));
+    UserResponseDto currentUser = userService.getCurrentUser();
+    return ResponseEntity.ok(currentUser);
   }
 
   @PostMapping
@@ -56,7 +54,7 @@ public class UserController {
   }
 
   @PutMapping("/{id}")
-  @PreAuthorize("hasRole('ADMIN') or @userSecurity.isCurrentUser(#id)")
+  @PreAuthorize("hasRole('ADMIN') or @userService.isCurrentUser(#id)")
   public ResponseEntity<UserResponseDto> updateUser(
       @PathVariable UUID id,
       @Valid @RequestBody UserUpdateRequestDto userUpdateRequestDto) {

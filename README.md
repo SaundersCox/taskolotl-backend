@@ -1,6 +1,6 @@
 # taskolotl-backend
 
-Copy code related to an entity for generating tests:
+Copy code related to an entity for generating tests and improvement recommendations:
 ```
 # Base directory of your project
 BASE_DIR="src/main/java/com/saunderscox/taskolotl"
@@ -16,3 +16,7 @@ cat "$BASE_DIR/entity/${ENTITY}.java" \
 
 echo "Contents of ${ENTITY} files copied to clipboard!"
 ```
+
+Add the following VM arg to handle the Mockito agent warning:
+
+`-XX:+EnableDynamicAgentLoading`

@@ -32,10 +32,22 @@ import org.springframework.transaction.annotation.Transactional;
 @Slf4j
 public class UserService {
 
+  public static final String USER_NOT_FOUND_WITH_ID = "User not found with id: ";
   private final UserRepository userRepository;
   private final SkillRepository skillRepository;
   private final RoleRepository roleRepository;
-  private final JwtService jwtService;
+
+  /**
+   * Checks if the current authenticated user matches the given user ID
+   *
+   * @param userId The user ID to check
+   * @return true if the current user matches the ID
+   */
+  public boolean isCurrentUser(UUID userId) {
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    String email = authentication.getName();
+    return isUserIdMatchingEmail(userId, email);
+  }
 
   /**
    * Retrieves all users from the database
@@ -58,7 +70,7 @@ public class UserService {
   public UserResponseDto getUserById(UUID id) {
     log.debug("Fetching user with ID: {}", id);
     User user = userRepository.findById(id)
-        .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
+        .orElseThrow(() -> new ResourceNotFoundException(USER_NOT_FOUND_WITH_ID + id));
     return mapToDto(user);
   }
 
@@ -124,7 +136,7 @@ public class UserService {
     log.info("Updating user with ID: {}", id);
 
     User user = userRepository.findById(id)
-        .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
+        .orElseThrow(() -> new ResourceNotFoundException(USER_NOT_FOUND_WITH_ID + id));
 
     // Update fields if provided
     if (dto.getUsername() != null) {
@@ -162,7 +174,7 @@ public class UserService {
     log.info("Deleting user with ID: {}", id);
 
     if (!userRepository.existsById(id)) {
-      throw new ResourceNotFoundException("User not found with id: " + id);
+      throw new ResourceNotFoundException(USER_NOT_FOUND_WITH_ID + id);
     }
 
     userRepository.deleteById(id);
@@ -179,8 +191,9 @@ public class UserService {
     log.debug("Searching users with query: {} and pagination: page={}, size={}",
         query, pageable.getPageNumber(), pageable.getPageSize());
 
-    return userRepository.findByUsernameContainingIgnoreCaseOrEmailContainingIgnoreCase(query,
-        pageable).map(this::mapToDto);
+    return userRepository
+        .findByUsernameContainingIgnoreCaseOrEmailContainingIgnoreCase(query, query, pageable)
+        .map(this::mapToDto);
   }
 
   /**
@@ -195,7 +208,7 @@ public class UserService {
     log.info("Adding skill {} to user {}", skillId, userId);
 
     User user = userRepository.findById(userId)
-        .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
+        .orElseThrow(() -> new ResourceNotFoundException(USER_NOT_FOUND_WITH_ID + userId));
 
     Skill skill = skillRepository.findById(skillId)
         .orElseThrow(() -> new ResourceNotFoundException("Skill not found with id: " + skillId));
@@ -218,7 +231,7 @@ public class UserService {
     log.info("Removing skill {} from user {}", skillId, userId);
 
     User user = userRepository.findById(userId)
-        .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
+        .orElseThrow(() -> new ResourceNotFoundException(USER_NOT_FOUND_WITH_ID + userId));
 
     skillRepository.findById(skillId).ifPresent(user::removeSkill);
     User updatedUser = userRepository.save(user);
@@ -238,7 +251,7 @@ public class UserService {
     log.info("Adding role {} to user {}", roleId, userId);
 
     User user = userRepository.findById(userId)
-        .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
+        .orElseThrow(() -> new ResourceNotFoundException(USER_NOT_FOUND_WITH_ID + userId));
 
     Role role = roleRepository.findById(roleId)
         .orElseThrow(() -> new ResourceNotFoundException("Role not found with id: " + roleId));
@@ -261,7 +274,7 @@ public class UserService {
     log.info("Removing role {} from user {}", roleId, userId);
 
     User user = userRepository.findById(userId)
-        .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
+        .orElseThrow(() -> new ResourceNotFoundException(USER_NOT_FOUND_WITH_ID + userId));
 
     roleRepository.findById(roleId).ifPresent(user::removeRole);
     User updatedUser = userRepository.save(user);
