@@ -3,286 +3,319 @@ package com.saunderscox.taskolotl.service;
 import com.saunderscox.taskolotl.dto.UserCreateRequestDto;
 import com.saunderscox.taskolotl.dto.UserResponseDto;
 import com.saunderscox.taskolotl.dto.UserUpdateRequestDto;
+import com.saunderscox.taskolotl.entity.Permission;
 import com.saunderscox.taskolotl.entity.Role;
 import com.saunderscox.taskolotl.entity.Skill;
 import com.saunderscox.taskolotl.entity.User;
-import com.saunderscox.taskolotl.exception.DuplicateResourceException;
 import com.saunderscox.taskolotl.exception.ResourceNotFoundException;
-import com.saunderscox.taskolotl.mapper.UserMapper;
 import com.saunderscox.taskolotl.repository.RoleRepository;
 import com.saunderscox.taskolotl.repository.SkillRepository;
 import com.saunderscox.taskolotl.repository.UserRepository;
-import java.util.Collection;
 import java.util.HashSet;
-import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Service for managing users.
+ * Service for managing user operations including CRUD operations and user-related business logic.
  */
 @Service
 @RequiredArgsConstructor
 @Transactional
-public class UserService implements UserDetailsService {
+@Slf4j
+public class UserService {
 
   private final UserRepository userRepository;
   private final SkillRepository skillRepository;
   private final RoleRepository roleRepository;
-  private final UserMapper userMapper;
   private final JwtService jwtService;
 
   /**
-   * Creates a new user.
+   * Retrieves all users from the database
    *
-   * @param dto the user creation request
-   * @return the created user
-   * @throws DuplicateResourceException if a user with the same username or email already exists
+   * @return List of all users as DTOs
    */
-  public UserResponseDto createUser(UserCreateRequestDto dto) {
-    if (userRepository.existsByUsernameIgnoreCase(dto.getUsername())) {
-      throw new DuplicateResourceException("User", "username", dto.getUsername());
-    }
-    if (userRepository.existsByEmailIgnoreCase(dto.getEmail())) {
-      throw new DuplicateResourceException("User", "email", dto.getEmail());
-    }
-
-    User user = userMapper.toEntity(dto);
-    user = userRepository.save(user);
-    return userMapper.toResponseDto(user);
-  }
-
-  @Transactional(readOnly = true)
-  public boolean existsByUsername(String username) {
-    return userRepository.existsByUsernameIgnoreCase(username);
-  }
-
-  @Transactional(readOnly = true)
-  public boolean existsByEmail(String email) {
-    return userRepository.existsByEmailIgnoreCase(email);
+  public Page<UserResponseDto> getAllUsers(Pageable pageable) {
+    log.debug("Fetching all users");
+    return userRepository.findAll(pageable)
+        .map(this::mapToDto);
   }
 
   /**
-   * Gets a user by ID.
+   * Retrieves a user by their ID
    *
-   * @param id the user ID
-   * @return the user
-   * @throws ResourceNotFoundException if the user is not found
+   * @param id The user ID
+   * @return The user as a DTO
+   * @throws ResourceNotFoundException if the user doesn't exist
    */
-  @Transactional(readOnly = true)
   public UserResponseDto getUserById(UUID id) {
-    User user = findUserById(id);
-    return userMapper.toResponseDto(user);
+    log.debug("Fetching user with ID: {}", id);
+    User user = userRepository.findById(id)
+        .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
+    return mapToDto(user);
   }
 
   /**
-   * Gets a user by username.
+   * Retrieves a user by their email
    *
-   * @param username the username
-   * @return the user
-   * @throws ResourceNotFoundException if the user is not found
+   * @param email The user's email
+   * @return The user as a DTO
+   * @throws ResourceNotFoundException if the user doesn't exist
    */
-  @Transactional(readOnly = true)
-  public UserResponseDto getUserByUsername(String username) {
-    User user = userRepository.findByUsernameIgnoreCase(username)
-        .orElseThrow(
-            () -> new ResourceNotFoundException("User not found with username: " + username));
-    return userMapper.toResponseDto(user);
-  }
-
-  /**
-   * Gets a user by email.
-   *
-   * @param email the email
-   * @return the user
-   * @throws ResourceNotFoundException if the user is not found
-   */
-  @Transactional(readOnly = true)
   public UserResponseDto getUserByEmail(String email) {
+    log.debug("Fetching user with email: {}", email);
     User user = userRepository.findByEmailIgnoreCase(email)
         .orElseThrow(() -> new ResourceNotFoundException("User not found with email: " + email));
-    return userMapper.toResponseDto(user);
+    return mapToDto(user);
   }
 
   /**
-   * Gets a user by OAuth ID.
+   * Creates a new user
    *
-   * @param oauthId the OAuth ID
-   * @return the user
-   * @throws ResourceNotFoundException if the user is not found
+   * @param dto The user creation request
+   * @return The created user as a DTO
+   * @throws IllegalArgumentException if email or username already exists
    */
-  @Transactional(readOnly = true)
-  public UserResponseDto getUserByOauthId(String oauthId) {
-    User user = userRepository.findByOauthId(oauthId)
-        .orElseThrow(
-            () -> new ResourceNotFoundException("User not found with OAuth ID: " + oauthId));
-    return userMapper.toResponseDto(user);
-  }
+  public UserResponseDto createUser(UserCreateRequestDto dto) {
+    log.info("Creating new user with username: {}", dto.getUsername());
 
-  /**
-   * Gets all users with pagination.
-   *
-   * @param pageable pagination information
-   * @return page of users
-   */
-  @Transactional(readOnly = true)
-  public Page<UserResponseDto> getAllUsers(Pageable pageable) {
-    return userRepository.findAll(pageable)
-        .map(userMapper::toResponseDto);
-  }
-
-  /**
-   * Updates a user.
-   *
-   * @param id  the user ID
-   * @param dto the user update request
-   * @return the updated user
-   * @throws ResourceNotFoundException  if the user is not found
-   * @throws DuplicateResourceException if the new username already exists
-   */
-  public UserResponseDto updateUser(UUID id, UserUpdateRequestDto dto) {
-    User user = findUserById(id);
-
-    if (dto.getUsername() != null && !dto.getUsername().equalsIgnoreCase(user.getUsername()) &&
-        userRepository.existsByUsernameIgnoreCase(dto.getUsername())) {
-      throw new DuplicateResourceException("User", "username", dto.getUsername());
+    // Check if email or username already exists
+    if (userRepository.existsByEmailIgnoreCase(dto.getEmail())) {
+      log.warn("Email already in use: {}", dto.getEmail());
+      throw new IllegalArgumentException("Email already in use");
     }
 
-    userMapper.updateEntityFromDto(dto, user);
-    user = userRepository.save(user);
-    return userMapper.toResponseDto(user);
+    if (userRepository.existsByUsernameIgnoreCase(dto.getUsername())) {
+      log.warn("Username already in use: {}", dto.getUsername());
+      throw new IllegalArgumentException("Username already in use");
+    }
+
+    User user = User.builder()
+        .username(dto.getUsername())
+        .email(dto.getEmail())
+        .oauthId(dto.getOauthId())
+        .permission(Permission.USER)
+        .skills(new HashSet<>())
+        .roles(new HashSet<>())
+        .build();
+
+    User savedUser = userRepository.save(user);
+    log.info("User created successfully with ID: {}", savedUser.getId());
+    return mapToDto(savedUser);
   }
 
   /**
-   * Deletes a user.
+   * Updates an existing user
    *
-   * @param id the user ID
-   * @throws ResourceNotFoundException if the user is not found
+   * @param id  The user ID
+   * @param dto The update request
+   * @return The updated user as a DTO
+   * @throws ResourceNotFoundException if the user doesn't exist
+   * @throws IllegalArgumentException  if username is already taken by another user
+   */
+  public UserResponseDto updateUser(UUID id, UserUpdateRequestDto dto) {
+    log.info("Updating user with ID: {}", id);
+
+    User user = userRepository.findById(id)
+        .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
+
+    // Update fields if provided
+    if (dto.getUsername() != null) {
+      // Check if username is already taken by another user
+      userRepository.findByUsernameIgnoreCase(dto.getUsername())
+          .ifPresent(existingUser -> {
+            if (!existingUser.getId().equals(id)) {
+              log.warn("Username already in use by another user: {}", dto.getUsername());
+              throw new IllegalArgumentException("Username already in use");
+            }
+          });
+      user.setUsername(dto.getUsername());
+    }
+
+    if (dto.getProfileDescription() != null) {
+      user.setProfileDescription(dto.getProfileDescription());
+    }
+
+    if (dto.getProfilePictureUrl() != null) {
+      user.setProfilePictureUrl(dto.getProfilePictureUrl());
+    }
+
+    User updatedUser = userRepository.save(user);
+    log.info("User updated successfully: {}", updatedUser.getUsername());
+    return mapToDto(updatedUser);
+  }
+
+  /**
+   * Deletes a user
+   *
+   * @param id The user ID
+   * @throws ResourceNotFoundException if the user doesn't exist
    */
   public void deleteUser(UUID id) {
+    log.info("Deleting user with ID: {}", id);
+
     if (!userRepository.existsById(id)) {
       throw new ResourceNotFoundException("User not found with id: " + id);
     }
+
     userRepository.deleteById(id);
+    log.info("User deleted successfully");
   }
 
   /**
-   * Adds skills to a user.
+   * Searches for users by username or email
    *
-   * @param userId   the user ID
-   * @param skillIds the skill IDs to add
-   * @return the updated user
-   * @throws ResourceNotFoundException if the user or any skill is not found
+   * @param query The search query
+   * @return List of matching users as DTOs
    */
-  public UserResponseDto addSkillsToUser(UUID userId, Set<UUID> skillIds) {
-    User user = findUserById(userId);
-    Set<Skill> skillsToAdd = new HashSet<>(skillRepository.findAllById(skillIds));
-    skillsToAdd.forEach(user::addSkill);
-    User savedUser = userRepository.save(user);
-    return userMapper.toResponseDto(savedUser);
+  public Page<UserResponseDto> searchUsers(String query, Pageable pageable) {
+    log.debug("Searching users with query: {} and pagination: page={}, size={}",
+        query, pageable.getPageNumber(), pageable.getPageSize());
+
+    return userRepository.findByUsernameContainingIgnoreCaseOrEmailContainingIgnoreCase(query,
+        pageable).map(this::mapToDto);
   }
 
   /**
-   * Removes skills from a user.
+   * Adds a skill to a user
    *
-   * @param userId   the user ID
-   * @param skillIds the skill IDs to remove
-   * @return the updated user
-   * @throws ResourceNotFoundException if the user is not found
+   * @param userId  The user ID
+   * @param skillId The skill ID
+   * @return The updated user as a DTO
+   * @throws ResourceNotFoundException if the user or skill doesn't exist
    */
-  public UserResponseDto removeSkillsFromUser(UUID userId, Set<UUID> skillIds) {
-    User user = findUserById(userId);
-    Set<Skill> skillsToRemove = new HashSet<>(skillRepository.findAllById(skillIds));
-    skillsToRemove.forEach(user::removeSkill);
-    User savedUser = userRepository.save(user);
-    return userMapper.toResponseDto(savedUser);
+  public UserResponseDto addSkillToUser(UUID userId, UUID skillId) {
+    log.info("Adding skill {} to user {}", skillId, userId);
+
+    User user = userRepository.findById(userId)
+        .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
+
+    Skill skill = skillRepository.findById(skillId)
+        .orElseThrow(() -> new ResourceNotFoundException("Skill not found with id: " + skillId));
+
+    user.addSkill(skill);
+    User updatedUser = userRepository.save(user);
+    log.info("Skill added successfully to user");
+    return mapToDto(updatedUser);
   }
 
   /**
-   * Adds roles to a user.
+   * Removes a skill from a user
    *
-   * @param userId  the user ID
-   * @param roleIds the role IDs to add
-   * @return the updated user
-   * @throws ResourceNotFoundException if the user or any role is not found
+   * @param userId  The user ID
+   * @param skillId The skill ID
+   * @return The updated user as a DTO
+   * @throws ResourceNotFoundException if the user doesn't exist
    */
-  public UserResponseDto addRolesToUser(UUID userId, Set<UUID> roleIds) {
-    User user = findUserById(userId);
-    Set<Role> rolesToAdd = new HashSet<>(roleRepository.findAllById(roleIds));
-    rolesToAdd.forEach(user::addRole);
-    User savedUser = userRepository.save(user);
-    return userMapper.toResponseDto(savedUser);
+  public UserResponseDto removeSkillFromUser(UUID userId, UUID skillId) {
+    log.info("Removing skill {} from user {}", skillId, userId);
+
+    User user = userRepository.findById(userId)
+        .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
+
+    skillRepository.findById(skillId).ifPresent(user::removeSkill);
+    User updatedUser = userRepository.save(user);
+    log.info("Skill removed successfully from user");
+    return mapToDto(updatedUser);
   }
 
   /**
-   * Removes roles from a user.
+   * Adds a role to a user
    *
-   * @param userId  the user ID
-   * @param roleIds the role IDs to remove
-   * @return the updated user
-   * @throws ResourceNotFoundException if the user is not found
+   * @param userId The user ID
+   * @param roleId The role ID
+   * @return The updated user as a DTO
+   * @throws ResourceNotFoundException if the user or role doesn't exist
    */
-  public UserResponseDto removeRolesFromUser(UUID userId, Set<UUID> roleIds) {
-    User user = findUserById(userId);
-    Set<Role> rolesToRemove = new HashSet<>(roleRepository.findAllById(roleIds));
-    rolesToRemove.forEach(user::removeRole);
-    User savedUser = userRepository.save(user);
-    return userMapper.toResponseDto(savedUser);
+  public UserResponseDto addRoleToUser(UUID userId, UUID roleId) {
+    log.info("Adding role {} to user {}", roleId, userId);
+
+    User user = userRepository.findById(userId)
+        .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
+
+    Role role = roleRepository.findById(roleId)
+        .orElseThrow(() -> new ResourceNotFoundException("Role not found with id: " + roleId));
+
+    user.addRole(role);
+    User updatedUser = userRepository.save(user);
+    log.info("Role added successfully to user");
+    return mapToDto(updatedUser);
   }
 
   /**
-   * Validates a JWT token.
+   * Removes a role from a user
    *
-   * @param token the JWT token
-   * @return true if the token is valid, false otherwise
+   * @param userId The user ID
+   * @param roleId The role ID
+   * @return The updated user as a DTO
+   * @throws ResourceNotFoundException if the user doesn't exist
    */
-  public boolean validateToken(String token) {
-    return jwtService.validateToken(token);
+  public UserResponseDto removeRoleFromUser(UUID userId, UUID roleId) {
+    log.info("Removing role {} from user {}", roleId, userId);
+
+    User user = userRepository.findById(userId)
+        .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
+
+    roleRepository.findById(roleId).ifPresent(user::removeRole);
+    User updatedUser = userRepository.save(user);
+    log.info("Role removed successfully from user");
+    return mapToDto(updatedUser);
   }
 
   /**
-   * Loads a user by username for Spring Security.
+   * Gets the current authenticated user
    *
-   * @param username the username
-   * @return the user details
-   * @throws UsernameNotFoundException if the user is not found
+   * @return The current user as a DTO
+   * @throws ResourceNotFoundException if the user doesn't exist
    */
-  @Override
-  @Transactional(readOnly = true)
-  public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-    User user = userRepository.findByUsernameIgnoreCase(username)
-        .orElseThrow(
-            () -> new UsernameNotFoundException("User not found with username: " + username));
-
-    Collection<SimpleGrantedAuthority> authorities = user.getRoles().stream()
-        .map(role -> new SimpleGrantedAuthority("ROLE_" + role.getName().toUpperCase()))
-        .collect(Collectors.toList());
-
-    return new org.springframework.security.core.userdetails.User(
-        user.getUsername(),
-        "", // No password for OAuth users
-        authorities
-    );
+  public UserResponseDto getCurrentUser() {
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    log.debug("Getting current user: {}", authentication.getName());
+    return getUserByEmail(authentication.getName());
   }
 
   /**
-   * Helper method to find a user by ID.
+   * Checks if a user ID matches a user with the given email Used for authorization checks
    *
-   * @param id the user ID
-   * @return the user
-   * @throws ResourceNotFoundException if the user is not found
+   * @param userId The user ID to check
+   * @param email  The email to check against
+   * @return true if the user ID belongs to the user with the given email
    */
-  private User findUserById(UUID id) {
-    return userRepository.findById(id)
-        .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
+  public boolean isUserIdMatchingEmail(UUID userId, String email) {
+    return userRepository.findById(userId)
+        .map(user -> user.getEmail().equalsIgnoreCase(email))
+        .orElse(false);
+  }
+
+  /**
+   * Maps a User entity to a UserResponseDto
+   *
+   * @param user The user entity
+   * @return The user DTO
+   */
+  private UserResponseDto mapToDto(User user) {
+    return UserResponseDto.builder()
+        .id(user.getId())
+        .username(user.getUsername())
+        .email(user.getEmail())
+        .profileDescription(user.getProfileDescription())
+        .profilePictureUrl(user.getProfilePictureUrl())
+        .oauthProvider(user.getOauthProvider())
+        .createdAt(user.getCreatedAt())
+        .updatedAt(user.getUpdatedAt())
+        .skillIds(user.getSkills() != null ?
+            user.getSkills().stream().map(Skill::getId).collect(Collectors.toSet()) :
+            new HashSet<>())
+        .roleIds(user.getRoles() != null ?
+            user.getRoles().stream().map(Role::getId).collect(Collectors.toSet()) :
+            new HashSet<>())
+        .build();
   }
 }

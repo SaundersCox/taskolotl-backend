@@ -3,6 +3,7 @@ package com.saunderscox.taskolotl.mapper;
 import com.saunderscox.taskolotl.dto.UserCreateRequestDto;
 import com.saunderscox.taskolotl.dto.UserResponseDto;
 import com.saunderscox.taskolotl.dto.UserUpdateRequestDto;
+import com.saunderscox.taskolotl.entity.BaseEntity;
 import com.saunderscox.taskolotl.entity.User;
 import java.util.List;
 import java.util.Set;
@@ -12,13 +13,15 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 import org.mapstruct.NullValuePropertyMappingStrategy;
+import org.mapstruct.ReportingPolicy;
 
 /**
  * Maps between User entities and DTOs.
  */
 @Mapper(
     componentModel = "spring",
-    nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE
+    nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE,
+    unmappedTargetPolicy = ReportingPolicy.IGNORE
 )
 public interface UserMapper {
 
@@ -34,13 +37,13 @@ public interface UserMapper {
 
   default Set<UUID> getSkillIds(User user) {
     return user.getSkills().stream()
-        .map(skill -> skill.getId())
+        .map(BaseEntity::getId)
         .collect(Collectors.toSet());
   }
 
   default Set<UUID> getRoleIds(User user) {
     return user.getRoles().stream()
-        .map(role -> role.getId())
+        .map(BaseEntity::getId)
         .collect(Collectors.toSet());
   }
 }

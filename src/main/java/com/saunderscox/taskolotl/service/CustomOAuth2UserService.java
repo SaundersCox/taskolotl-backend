@@ -1,5 +1,6 @@
 package com.saunderscox.taskolotl.service;
 
+import com.saunderscox.taskolotl.entity.Permission;
 import com.saunderscox.taskolotl.entity.User;
 import com.saunderscox.taskolotl.repository.UserRepository;
 import java.util.Map;
@@ -59,6 +60,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
               .oauthId(oauthId)
               .oauthProvider(providerName)
               .profilePictureUrl(picture)
+              .permission(Permission.USER)
               .build();
           return userRepository.save(newUser);
         });

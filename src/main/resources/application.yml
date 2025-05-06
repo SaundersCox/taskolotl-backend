@@ -82,7 +82,11 @@ app:
   security:
     cors:
       allowed-origins:
-        localhost:4200
+        ${ALLOWED_ORIGINS:http://localhost:4200}
     jwt:
       secret: ${JWT_SECRET}
-      expiration-ms: ${JWT_EXPIRATION}
+      expiration-ms: ${JWT_EXPIRATION:86400000}
+      refresh-expiration-ms: ${JWT_REFRESH_EXPIRATION:604800000}
+      issuer: ${JWT_ISSUER:https://plmcty.com/taskolotl}
+      audience: ${JWT_AUDIENCE:taskolotl-web-client}
+    admin-emails: ${ADMIN_EMAILS:saunderscox@gmail.com}

@@ -3,6 +3,8 @@ package com.saunderscox.taskolotl.repository;
 import com.saunderscox.taskolotl.entity.User;
 import java.util.Optional;
 import java.util.UUID;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -48,4 +50,15 @@ public interface UserRepository extends JpaRepository<User, UUID> {
    * @return true if a user exists with this username
    */
   boolean existsByUsernameIgnoreCase(String username);
+
+
+  /**
+   * Search for users by username or email (case insensitive)
+   *
+   * @param query    The search term
+   * @param pageable Pageable object for pagination
+   * @return A Page of matching users
+   */
+  Page<User> findByUsernameContainingIgnoreCaseOrEmailContainingIgnoreCase(String query,
+      Pageable pageable);
 }

@@ -2,6 +2,8 @@ package com.saunderscox.taskolotl.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
@@ -29,7 +31,8 @@ import org.hibernate.validator.constraints.URL;
 @Table(name = "users", indexes = {
     @Index(name = "idx_user_username", columnList = "username"),
     @Index(name = "idx_user_email", columnList = "email"),
-    @Index(name = "idx_user_oauth_id", columnList = "oauth_id")
+    @Index(name = "idx_user_oauth_id", columnList = "oauth_id"),
+    @Index(name = "idx_user_permission", columnList = "permission")
 })
 @NoArgsConstructor
 @AllArgsConstructor
@@ -53,6 +56,11 @@ public class User extends BaseEntity {
 
   @Column(length = 100)
   private String oauthProvider;
+
+  @Enumerated(EnumType.STRING)
+  @Column(nullable = false)
+  @Builder.Default
+  private Permission permission = Permission.USER;
 
   @Setter
   private String profileDescription;
@@ -80,10 +88,12 @@ public class User extends BaseEntity {
   private Set<Comment> comments = new HashSet<>();
 
   @ManyToMany(mappedBy = "users", fetch = FetchType.LAZY)
+  @Setter
   @Builder.Default
   private Set<Skill> skills = new HashSet<>();
 
   @ManyToMany(mappedBy = "users", fetch = FetchType.LAZY)
+  @Setter
   @Builder.Default
   private Set<Role> roles = new HashSet<>();
 
