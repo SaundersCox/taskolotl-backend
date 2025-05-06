@@ -19,7 +19,7 @@ spring:
       spec: maximumSize=100000,expireAfterAccess=3600s
   # In-memory H2 database for prototyping
   datasource:
-    url: jdbc:h2:mem:testdb;MODE=MSSQLServer
+    url: jdbc:h2:mem:taskolotl
     driver-class-name: org.h2.Driver
     username: sa
     password: password
@@ -30,10 +30,14 @@ spring:
       path: /h2-console
   # Create tables on start, drop tables on shutdown, run SQL scripts after Hibernate creates schema
   jpa:
-    open-in-view: false
     hibernate:
       ddl-auto: create-drop
     defer-datasource-initialization: true
+    open-in-view: false
+    show-sql: true
+  sql:
+    init:
+      mode: ALWAYS
 
 # Makes this project entirely under plmcty.com/taskolotl
 server:
