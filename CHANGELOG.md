@@ -1,3 +1,10 @@
+# [1.1.0](https://github.com/SaundersCox/taskolotl-backend/compare/v1.0.1...v1.1.0) (2025-05-07)
+
+
+### Features
+
+* **readme:** Updated readme sections - Generate a Bearer Token, Code Analysis, Versioning, Setup ([a7553a1](https://github.com/SaundersCox/taskolotl-backend/commit/a7553a16965e7286f2e3e0cd0630b8ef957a4904))
+
 ## [1.0.1](https://github.com/SaundersCox/taskolotl-backend/compare/v1.0.0...v1.0.1) (2025-05-06)
 
 
