@@ -29,6 +29,7 @@ echo "Contents of ${ENTITY} files copied to clipboard!"
 - fix: → Patch release (1.0.0 → 1.0.1)
 - feat: → Minor release (1.0.0 → 1.1.0)
 - Any commit with BREAKING CHANGE: → Major release (1.0.0 → 2.0.0)
+- See https://github.com/semantic-release/semantic-release?tab=readme-ov-file#how-does-it-work
 
 ## Setup
 
