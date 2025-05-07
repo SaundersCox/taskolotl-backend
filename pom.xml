@@ -11,7 +11,7 @@
   </parent>
   <groupId>com.saunderscox</groupId>
   <artifactId>taskolotl</artifactId>
-  <version>1.1.0</version>
+  <version>1.1.1</version>
   <name>taskolotl</name>
   <description>Backend for Taskolotl</description>
   <url/>
