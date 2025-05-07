@@ -1,3 +1,10 @@
+## [1.0.1](https://github.com/SaundersCox/taskolotl-backend/compare/v1.0.0...v1.0.1) (2025-05-06)
+
+
+### Bug Fixes
+
+* Readded auth controller, added data.sql with valid entries also enabled with app yml modifications ([666c71d](https://github.com/SaundersCox/taskolotl-backend/commit/666c71d4153eddd34b8a41cc4156e42d0e5a4abe))
+
 # 1.0.0 (2025-05-06)
 
 
