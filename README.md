@@ -1,6 +1,12 @@
 # taskolotl-backend
 
-Copy code related to an entity for generating tests and improvement recommendations:
+## Generate a Bearer Token
+
+- http://localhost:8080/taskolotl/login/oauth2/code/google
+
+## Code Analysis
+
+Useful for troubleshooting, improving, documenting, and testing with coding assistants
 
 ```
 # Base directory of your project
@@ -18,12 +24,16 @@ cat "$BASE_DIR/entity/${ENTITY}.java" \
 echo "Contents of ${ENTITY} files copied to clipboard!"
 ```
 
-Add the following VM arg to handle the Mockito agent warning:
-
-`-XX:+EnableDynamicAgentLoading`
-
-Versioning:
+## Versioning
 
 - fix: → Patch release (1.0.0 → 1.0.1)
 - feat: → Minor release (1.0.0 → 1.1.0)
 - Any commit with BREAKING CHANGE: → Major release (1.0.0 → 2.0.0)
+
+## Setup
+
+### Disable Mockito Warning
+
+Add the following VM arg to handle the Mockito agent warning:
+
+`-XX:+EnableDynamicAgentLoading`
