@@ -32,7 +32,7 @@ import lombok.experimental.SuperBuilder;
  * skills. A board serves as the primary organizational unit.
  */
 @Entity
-@Table(name = "board", indexes = {@Index(name = "idx_board_title", columnList = "title")})
+@Table(name = "boards", indexes = {@Index(name = "idx_board_title", columnList = "title")})
 @NoArgsConstructor
 @AllArgsConstructor
 @SuperBuilder

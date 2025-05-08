@@ -1,9 +1,9 @@
 package com.saunderscox.taskolotl.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.saunderscox.taskolotl.service.CustomOAuth2UserService;
 import com.saunderscox.taskolotl.service.JwtService;
+import com.saunderscox.taskolotl.service.OAuth2UserService;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -13,20 +13,17 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-/**
- * Configuration class for setting up Spring Security, including OAuth2 login and JWT token
- * handling.
- */
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-  private final CustomOAuth2UserService customOAuth2UserService;
+  private final OAuth2UserService oauth2UserService;
   private final JwtService jwtService;
   private final ObjectMapper objectMapper;
   private final JwtAuthenticationFilter jwtAuthenticationFilter;
@@ -34,60 +31,67 @@ public class SecurityConfig {
   @Value("${spring.profiles.active:}")
   private String activeProfile;
 
+  @Value("${app.security.cors.allowed-origins:}")
+  private String allowedOrigins;
+
   /**
-   * Configures the security filter chain with custom rules for OAuth2 login and JWT token
-   * handling.
+   * Configures CSRF, sessions, authorization rules, OAuth2 login, JWT authentication, and other
    *
-   * @param http the HttpSecurity object to configure
-   * @return a SecurityFilterChain instance
+   * @param http The {@link HttpSecurity} object to configure
+   * @return The configured {@link SecurityFilterChain}
+   * @throws Exception If an error occurs configuring the security chain
    */
   @Bean
   public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
-    if (activeProfile.contains("dev")) {
-      http.authorizeHttpRequests(auth ->
-              auth.requestMatchers("/h2-console/**").permitAll())
-          .headers(headers ->
-              headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin)
-          );
-    }
+    boolean isDev = activeProfile.contains("dev");
 
-    http
+    return http
+        .cors(cors -> {
+          CorsConfiguration config = new CorsConfiguration();
+          config.setAllowedOrigins(List.of(allowedOrigins.split(",")));
+          config.applyPermitDefaultValues();
+          config.setAllowCredentials(true);
+
+          UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+          source.registerCorsConfiguration("/**", config);
+          cors.configurationSource(source);
+        })
+        .headers(headers -> {
+          if (isDev) {
+            // Specifically for H2 Console iframes
+            headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::disable);
+          }
+        })
         .csrf(csrf -> csrf
-            .ignoringRequestMatchers("/api/**")
+            // API (Stateless) & H2 Console don't need CSRF protection
+            .ignoringRequestMatchers("/api/**", isDev ? "/h2-console/**" : "")
             .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()))
-        .sessionManagement(session ->
-            session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-        .authorizeHttpRequests(auth -> auth.
-            requestMatchers("/api/public/**", "/actuator/health/**", "/", "/error",
-                "/login/**", "/oauth2/**")
-            .permitAll()
-            .requestMatchers("/api/admin/**").hasRole("ADMIN")
-            .anyRequest().authenticated()
-        )
+        .sessionManagement(session -> session
+            // Avoid sessions since we use JWT for stateless auth
+            .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+        .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
         .oauth2Login(oauth2 -> oauth2
-            .userInfoEndpoint(userInfo ->
-                userInfo.userService(customOAuth2UserService))
-            .successHandler(getSuccessHandler()))
-        .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
-    return http.build();
-  }
+            .userInfoEndpoint(userInfo -> userInfo.userService(oauth2UserService))
+            .successHandler((request, response, authentication) -> {
+              response.setContentType("application/json");
+              response.setHeader("Cache-Control", "no-store");
+              response.setHeader("Pragma", "no-cache");
 
-  /**
-   * Creates a custom authentication success handler for OAuth2 login that returns a JSON response
-   * containing the JWT token.
-   */
-  private AuthenticationSuccessHandler getSuccessHandler() {
-    return (request, response, authentication) -> {
-      response.setContentType("application/json");
-
-      String token = jwtService.generateToken(authentication);
-      long expirationSeconds = jwtService.getExpirationMs() / 1000;
-      ObjectNode value = objectMapper.createObjectNode()
-          .put("access_token", token)
-          .put("token_type", "Bearer")
-          .put("expires_in", expirationSeconds);
-      objectMapper.writeValue(response.getWriter(), value);
-    };
+              String token = jwtService.generateToken(authentication);
+              objectMapper.writeValue(response.getWriter(), objectMapper.createObjectNode()
+                  .put("access_token", token)
+                  .put("token_type", "Bearer")
+                  .put("expires_in", jwtService.getExpirationMs() / 1000));
+            }))
+        .authorizeHttpRequests(auth -> auth
+            // Swagger UI, error page, login, OAuth2 flow endpoints
+            .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/error", "/login",
+                "/oauth2/authorization/google", isDev ? "/h2-console/**" : "").permitAll()
+            // Admin-specific endpoints
+            .requestMatchers("/api/admin/**").hasRole("ADMIN")
+            // Other API endpoints and Actuator
+            .anyRequest().authenticated())
+        .build();
   }
 }

@@ -1,5 +1,9 @@
 # taskolotl-backend
 
+## API Docs
+
+- http://localhost:8080/taskolotl/swagger-ui/index.html
+
 ## Generate a Bearer Token
 
 - http://localhost:8080/taskolotl/login/oauth2/code/google

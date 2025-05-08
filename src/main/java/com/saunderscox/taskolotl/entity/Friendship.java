@@ -23,7 +23,8 @@ import lombok.experimental.SuperBuilder;
  * friend to restrict access to each other's user information and comments.
  */
 @Entity
-@Table(uniqueConstraints = {@UniqueConstraint(columnNames = {"self_id", "target_id"}),}, indexes = {
+@Table(name = "friendships", uniqueConstraints = {
+    @UniqueConstraint(columnNames = {"self_id", "target_id"}),}, indexes = {
     @Index(name = "idx_friendship_self", columnList = "self_id"),
     @Index(name = "idx_friendship_target", columnList = "target_id")})
 @NoArgsConstructor

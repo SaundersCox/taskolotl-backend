@@ -34,7 +34,7 @@ spring:
       ddl-auto: create-drop
     defer-datasource-initialization: true
     open-in-view: false
-    show-sql: true
+  #    show-sql: true
   sql:
     init:
       mode: ALWAYS
@@ -80,12 +80,10 @@ bucket4j:
               time: 1
               unit: hours
 
-info:
-  app:
-    version: @project.version@
-
 # Custom app properties
 app:
+  project:
+    version: @project.version@
   security:
     cors:
       allowed-origins:
@@ -93,7 +91,6 @@ app:
     jwt:
       secret: ${JWT_SECRET}
       expiration-ms: ${JWT_EXPIRATION:86400000}
-      refresh-expiration-ms: ${JWT_REFRESH_EXPIRATION:604800000}
       issuer: ${JWT_ISSUER:https://plmcty.com/taskolotl}
       audience: ${JWT_AUDIENCE:taskolotl-web-client}
     admin-emails: ${ADMIN_EMAILS:saunderscox@gmail.com}

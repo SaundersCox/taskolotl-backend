@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 import javax.crypto.SecretKey;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -25,19 +26,12 @@ import org.springframework.util.StringUtils;
  */
 @Service
 @ConfigurationProperties(prefix = "app.security.jwt")
+@Slf4j
 @Getter
 @Setter
 public class JwtService {
 
-  /**
-   * Secret key used for signing JWT tokens. This should be set in application properties and kept
-   * secure.
-   */
   private String secret;
-
-  /**
-   * Token expiration time in milliseconds. This should be set in application properties.
-   */
   private long expirationMs;
 
   /**
@@ -91,6 +85,7 @@ public class JwtService {
       Jwts.parser().verifyWith(getSigningKey()).build().parseSignedClaims(token);
       return true;
     } catch (Exception e) {
+      log.error("Token validation failed: {}", e.getMessage());
       return false;
     }
   }
