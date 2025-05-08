@@ -1,3 +1,11 @@
+# [1.2.0](https://github.com/SaundersCox/taskolotl-backend/compare/v1.1.1...v1.2.0) (2025-05-08)
+
+
+### Features
+
+* **security:** Token working correctly. ([4af4c7a](https://github.com/SaundersCox/taskolotl-backend/commit/4af4c7a6c2be5de6640bc054748864943e18d711))
+* **security:** Token working correctly. ([0bcd66c](https://github.com/SaundersCox/taskolotl-backend/commit/0bcd66c6b5620f7eb3dd9279fc29dc4206199c05))
+
 ## [1.1.1](https://github.com/SaundersCox/taskolotl-backend/compare/v1.1.0...v1.1.1) (2025-05-07)
 
 
