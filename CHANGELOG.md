@@ -1,3 +1,10 @@
+# [1.3.0](https://github.com/SaundersCox/taskolotl-backend/compare/v1.2.0...v1.3.0) (2025-05-09)
+
+
+### Features
+
+* **board:** Board working, auth refined ([ab26e02](https://github.com/SaundersCox/taskolotl-backend/commit/ab26e02d341fada7dd482b2e1330544ab84345dd))
+
 # [1.2.0](https://github.com/SaundersCox/taskolotl-backend/compare/v1.1.1...v1.2.0) (2025-05-08)
 
 
