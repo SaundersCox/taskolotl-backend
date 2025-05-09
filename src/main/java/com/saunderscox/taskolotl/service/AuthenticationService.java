@@ -20,7 +20,7 @@ public class AuthenticationService {
     Map<String, Object> status = new HashMap<>();
     status.put("authenticated", authenticated);
     if (authenticated) {
-      status.put("username", auth.getName());
+      status.put("oauthId", auth.getName());
     }
     return status;
   }

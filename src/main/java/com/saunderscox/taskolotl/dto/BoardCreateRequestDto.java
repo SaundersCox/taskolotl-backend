@@ -2,19 +2,21 @@ package com.saunderscox.taskolotl.dto;
 
 import com.saunderscox.taskolotl.entity.BoardType;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import java.util.Set;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
+@SuperBuilder
+
 public class BoardCreateRequestDto {
 
   @NotBlank(message = "Board title is required")
@@ -29,6 +31,8 @@ public class BoardCreateRequestDto {
 
   private boolean visible;
 
-  private Set<UUID> initialOwnerIds;
-  private Set<UUID> initialMemberIds;
+  @NotEmpty(message = "At least one owner is required")
+  private Set<UUID> ownerIds;
+
+  private Set<UUID> memberIds;
 }

@@ -2,65 +2,103 @@ package com.saunderscox.taskolotl.repository;
 
 import com.saunderscox.taskolotl.entity.Board;
 import com.saunderscox.taskolotl.entity.BoardType;
-import com.saunderscox.taskolotl.entity.User;
-import java.util.List;
 import java.util.UUID;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+/**
+ * Repository for Board entities.
+ */
 @Repository
 public interface BoardRepository extends JpaRepository<Board, UUID> {
 
-  // Find boards by owner
-  List<Board> findByOwnersContaining(User owner);
-
-  // Find boards by member
-  List<Board> findByMembersContaining(User member);
-
-  // Find boards by type
-  List<Board> findByBoardType(BoardType boardType);
+  /**
+   * Finds boards by title containing the given string (case-insensitive).
+   *
+   * @param title    The title to search for
+   * @param pageable Pagination information
+   * @return Page of matching boards
+   */
+  Page<Board> findByTitleContainingIgnoreCase(String title, Pageable pageable);
 
   /**
-   * Find boards by type with pagination.
+   * Finds boards by board type.
    *
-   * @param boardType the board type
-   * @param pageable  pagination information
-   * @return page of matching boards
+   * @param boardType The board type to filter by
+   * @param pageable  Pagination information
+   * @return Page of matching boards
    */
   Page<Board> findByBoardType(BoardType boardType, Pageable pageable);
 
-  // Find boards by title containing (case insensitive)
-  List<Board> findByTitleContainingIgnoreCase(String titlePart);
+  /**
+   * Finds boards where the specified user is an owner.
+   *
+   * @param ownerId  The owner's ID
+   * @param pageable Pagination information
+   * @return Page of boards owned by the user
+   */
+  Page<Board> findByOwnersId(UUID ownerId, Pageable pageable);
 
   /**
-   * Find boards by title containing with pagination.
+   * Finds boards where the specified user is a member.
    *
-   * @param titlePart part of the title to search for
-   * @param pageable  pagination information
-   * @return page of matching boards
+   * @param memberId The member's ID
+   * @param pageable Pagination information
+   * @return Page of boards where the user is a member
    */
-  Page<Board> findByTitleContainingIgnoreCase(String titlePart, Pageable pageable);
+  Page<Board> findByMembersId(UUID memberId, Pageable pageable);
 
+  /**
+   * Finds boards where the specified user is either an owner or a member.
+   *
+   * @param ownerId  The owner's ID
+   * @param memberId The member's ID (typically the same as ownerId)
+   * @param pageable Pagination information
+   * @return Page of boards accessible to the user
+   */
+  Page<Board> findByOwnersIdOrMembersId(UUID ownerId, UUID memberId, Pageable pageable);
 
-  // Find public boards
-  List<Board> findByVisible(boolean visible);
+  /**
+   * Finds boards associated with a specific role.
+   *
+   * @param roleId   The role's ID
+   * @param pageable Pagination information
+   * @return Page of boards associated with the role
+   */
+  Page<Board> findByRolesId(UUID roleId, Pageable pageable);
 
-  // Find boards by owner or member with pagination
-  @Query("SELECT b FROM Board b WHERE :user MEMBER OF b.owners OR :user MEMBER OF b.members")
-  Page<Board> findByUserWithAccess(@Param("user") User user, Pageable pageable);
+  /**
+   * Finds boards associated with a specific skill.
+   *
+   * @param skillId  The skill's ID
+   * @param pageable Pagination information
+   * @return Page of boards associated with the skill
+   */
+  Page<Board> findBySkillsId(UUID skillId, Pageable pageable);
 
-  // Find boards by skill
-  @Query("SELECT b FROM Board b JOIN b.skills s WHERE s.id = :skillId")
-  List<Board> findBySkillId(@Param("skillId") UUID skillId);
+  /**
+   * Finds boards that are visible (not private).
+   *
+   * @param pageable Pagination information
+   * @return Page of visible boards
+   */
+  Page<Board> findByVisibleTrue(Pageable pageable);
 
-  // Find boards by role
-  @Query("SELECT b FROM Board b JOIN b.roles r WHERE r.id = :roleId")
-  List<Board> findByRoleId(@Param("roleId") UUID roleId);
+  /**
+   * Counts the number of boards owned by a specific user.
+   *
+   * @param ownerId The owner's ID
+   * @return The count of boards owned by the user
+   */
+  long countByOwnersId(UUID ownerId);
 
-  // Count boards by owner
-  long countByOwnersContaining(User owner);
+  /**
+   * Checks if a board exists with the given title (case-insensitive).
+   *
+   * @param title The title to check
+   * @return true if a board with the title exists
+   */
+  boolean existsByTitleIgnoreCase(String title);
 }

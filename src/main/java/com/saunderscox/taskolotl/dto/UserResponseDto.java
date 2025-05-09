@@ -20,6 +20,7 @@ public class UserResponseDto extends BaseDto {
   private String profileDescription;
   private String profilePictureUrl;
   private String oauthProvider;
+  private String oauthId;
   private Set<UUID> skillIds;
   private Set<UUID> roleIds;
 }

@@ -1,7 +1,6 @@
 package com.saunderscox.taskolotl.dto;
 
 import com.saunderscox.taskolotl.entity.BoardType;
-import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
@@ -23,7 +22,7 @@ public class BoardResponseDto extends BaseDto {
   private boolean visible;
   private Set<UUID> ownerIds;
   private Set<UUID> memberIds;
-  private List<UUID> boardItemIds;
+  private Set<UUID> boardItemIds;
   private Set<UUID> roleIds;
   private Set<UUID> skillIds;
 }

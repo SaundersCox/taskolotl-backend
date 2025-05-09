@@ -90,12 +90,10 @@ public class Board extends BaseEntity {
    * Adds an item to this board. Updates both sides of the bidirectional relationship.
    *
    * @param boardItem The item to add to this board
-   * @return The added item
+   * @return true if the item was added, false otherwise
    */
-  public BoardItem addBoardItem(BoardItem boardItem) {
-    boardItems.add(boardItem);
-    boardItem.setBoard(this);
-    return boardItem;
+  protected boolean addBoardItem(BoardItem boardItem) {
+    return boardItems.add(boardItem);
   }
 
   /**
@@ -104,12 +102,8 @@ public class Board extends BaseEntity {
    * @param boardItem The item to remove
    * @return true if the item was removed, false otherwise
    */
-  public boolean removeBoardItem(BoardItem boardItem) {
-    boolean removed = boardItems.remove(boardItem);
-    if (removed) {
-      boardItem.setBoard(null);
-    }
-    return removed;
+  protected boolean removeBoardItem(BoardItem boardItem) {
+    return boardItems.remove(boardItem);
   }
 
   /**

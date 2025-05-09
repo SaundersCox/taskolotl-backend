@@ -41,7 +41,7 @@ import org.hibernate.validator.constraints.URL;
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
 public class User extends BaseEntity {
 
-  @Column(nullable = false, unique = true, length = 50)
+  @Column(nullable = false, length = 50)
   @Setter
   @ToString.Include
   private String username;
@@ -51,11 +51,11 @@ public class User extends BaseEntity {
   @NotBlank(message = "Email is required")
   private String email;
 
-  @Column(unique = true, length = 100)
-  private String oauthId;
-
   @Column(length = 100)
   private String oauthProvider;
+
+  @Column(unique = true, length = 100)
+  private String oauthId;
 
   @Enumerated(EnumType.STRING)
   @Column(nullable = false)

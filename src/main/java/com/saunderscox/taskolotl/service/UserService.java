@@ -3,17 +3,16 @@ package com.saunderscox.taskolotl.service;
 import com.saunderscox.taskolotl.dto.UserCreateRequestDto;
 import com.saunderscox.taskolotl.dto.UserResponseDto;
 import com.saunderscox.taskolotl.dto.UserUpdateRequestDto;
-import com.saunderscox.taskolotl.entity.Permission;
 import com.saunderscox.taskolotl.entity.Role;
 import com.saunderscox.taskolotl.entity.Skill;
 import com.saunderscox.taskolotl.entity.User;
 import com.saunderscox.taskolotl.exception.ResourceNotFoundException;
+import com.saunderscox.taskolotl.mapper.UserMapper;
 import com.saunderscox.taskolotl.repository.RoleRepository;
 import com.saunderscox.taskolotl.repository.SkillRepository;
 import com.saunderscox.taskolotl.repository.UserRepository;
 import java.util.HashSet;
 import java.util.UUID;
-import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -36,6 +35,7 @@ public class UserService {
   private final UserRepository userRepository;
   private final SkillRepository skillRepository;
   private final RoleRepository roleRepository;
+  private final UserMapper userMapper;
 
   /**
    * Checks if the current authenticated user matches the given user ID
@@ -57,7 +57,7 @@ public class UserService {
   public Page<UserResponseDto> getAllUsers(Pageable pageable) {
     log.debug("Fetching all users");
     return userRepository.findAll(pageable)
-        .map(this::mapToDto);
+        .map(userMapper::toResponseDto);
   }
 
   /**
@@ -71,7 +71,7 @@ public class UserService {
     log.debug("Fetching user with ID: {}", id);
     User user = userRepository.findById(id)
         .orElseThrow(() -> new ResourceNotFoundException(USER_NOT_FOUND_WITH_ID + id));
-    return mapToDto(user);
+    return userMapper.toResponseDto(user);
   }
 
   /**
@@ -85,7 +85,7 @@ public class UserService {
     log.debug("Fetching user with email: {}", email);
     User user = userRepository.findByEmailIgnoreCase(email)
         .orElseThrow(() -> new ResourceNotFoundException("User not found with email: " + email));
-    return mapToDto(user);
+    return userMapper.toResponseDto(user);
   }
 
   /**
@@ -109,18 +109,13 @@ public class UserService {
       throw new IllegalArgumentException("Username already in use");
     }
 
-    User user = User.builder()
-        .username(dto.getUsername())
-        .email(dto.getEmail())
-        .oauthId(dto.getOauthId())
-        .permission(Permission.USER)
-        .skills(new HashSet<>())
-        .roles(new HashSet<>())
-        .build();
+    User user = userMapper.toEntity(dto);
+    user.setSkills(new HashSet<>());
+    user.setRoles(new HashSet<>());
 
     User savedUser = userRepository.save(user);
     log.info("User created successfully with ID: {}", savedUser.getId());
-    return mapToDto(savedUser);
+    return userMapper.toResponseDto(savedUser);
   }
 
   /**
@@ -138,9 +133,8 @@ public class UserService {
     User user = userRepository.findById(id)
         .orElseThrow(() -> new ResourceNotFoundException(USER_NOT_FOUND_WITH_ID + id));
 
-    // Update fields if provided
+    // Check if username is already taken by another user
     if (dto.getUsername() != null) {
-      // Check if username is already taken by another user
       userRepository.findByUsernameIgnoreCase(dto.getUsername())
           .ifPresent(existingUser -> {
             if (!existingUser.getId().equals(id)) {
@@ -148,20 +142,12 @@ public class UserService {
               throw new IllegalArgumentException("Username already in use");
             }
           });
-      user.setUsername(dto.getUsername());
     }
 
-    if (dto.getProfileDescription() != null) {
-      user.setProfileDescription(dto.getProfileDescription());
-    }
-
-    if (dto.getProfilePictureUrl() != null) {
-      user.setProfilePictureUrl(dto.getProfilePictureUrl());
-    }
-
+    userMapper.updateEntityFromDto(dto, user);
     User updatedUser = userRepository.save(user);
     log.info("User updated successfully: {}", updatedUser.getUsername());
-    return mapToDto(updatedUser);
+    return userMapper.toResponseDto(updatedUser);
   }
 
   /**
@@ -193,7 +179,7 @@ public class UserService {
 
     return userRepository
         .findByUsernameContainingIgnoreCaseOrEmailContainingIgnoreCase(query, query, pageable)
-        .map(this::mapToDto);
+        .map(userMapper::toResponseDto);
   }
 
   /**
@@ -216,7 +202,7 @@ public class UserService {
     user.addSkill(skill);
     User updatedUser = userRepository.save(user);
     log.info("Skill added successfully to user");
-    return mapToDto(updatedUser);
+    return userMapper.toResponseDto(updatedUser);
   }
 
   /**
@@ -236,7 +222,7 @@ public class UserService {
     skillRepository.findById(skillId).ifPresent(user::removeSkill);
     User updatedUser = userRepository.save(user);
     log.info("Skill removed successfully from user");
-    return mapToDto(updatedUser);
+    return userMapper.toResponseDto(updatedUser);
   }
 
   /**
@@ -259,7 +245,7 @@ public class UserService {
     user.addRole(role);
     User updatedUser = userRepository.save(user);
     log.info("Role added successfully to user");
-    return mapToDto(updatedUser);
+    return userMapper.toResponseDto(updatedUser);
   }
 
   /**
@@ -279,7 +265,21 @@ public class UserService {
     roleRepository.findById(roleId).ifPresent(user::removeRole);
     User updatedUser = userRepository.save(user);
     log.info("Role removed successfully from user");
-    return mapToDto(updatedUser);
+    return userMapper.toResponseDto(updatedUser);
+  }
+
+  /**
+   * Retrieves a user by their OAuth2 ID
+   *
+   * @param oauthId The user OAuth2 ID
+   * @return The user as a DTO
+   * @throws ResourceNotFoundException if the user doesn't exist
+   */
+  public UserResponseDto getUserByOauthId(String oauthId) {
+    log.debug("Fetching user with OAuth2 ID: {}", oauthId);
+    User user = userRepository.findByOauthId(oauthId)
+        .orElseThrow(() -> new ResourceNotFoundException(USER_NOT_FOUND_WITH_ID + oauthId));
+    return userMapper.toResponseDto(user);
   }
 
   /**
@@ -290,9 +290,10 @@ public class UserService {
    */
   public UserResponseDto getCurrentUser() {
     Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-    log.debug("Getting current user: {}", authentication.getName());
-    return getUserByEmail(authentication.getName());
+    String oauthId = authentication.getName();
+    return getUserByOauthId(oauthId);
   }
+
 
   /**
    * Checks if a user ID matches a user with the given email Used for authorization checks
@@ -305,30 +306,5 @@ public class UserService {
     return userRepository.findById(userId)
         .map(user -> user.getEmail().equalsIgnoreCase(email))
         .orElse(false);
-  }
-
-  /**
-   * Maps a User entity to a UserResponseDto
-   *
-   * @param user The user entity
-   * @return The user DTO
-   */
-  private UserResponseDto mapToDto(User user) {
-    return UserResponseDto.builder()
-        .id(user.getId())
-        .username(user.getUsername())
-        .email(user.getEmail())
-        .profileDescription(user.getProfileDescription())
-        .profilePictureUrl(user.getProfilePictureUrl())
-        .oauthProvider(user.getOauthProvider())
-        .createdAt(user.getCreatedAt())
-        .updatedAt(user.getUpdatedAt())
-        .skillIds(user.getSkills() != null ?
-            user.getSkills().stream().map(Skill::getId).collect(Collectors.toSet()) :
-            new HashSet<>())
-        .roleIds(user.getRoles() != null ?
-            user.getRoles().stream().map(Role::getId).collect(Collectors.toSet()) :
-            new HashSet<>())
-        .build();
   }
 }

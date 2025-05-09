@@ -7,10 +7,10 @@ public enum BoardType {
   /**
    * Task-oriented board for managing work items with statuses, assignments, and deadlines.
    */
-  TASK_BOARD,
+  TASK,
 
   /**
    * Study-oriented board for organizing ideas, knowledge, and learning materials.
    */
-  STUDY_BOARD
+  STUDY
 }

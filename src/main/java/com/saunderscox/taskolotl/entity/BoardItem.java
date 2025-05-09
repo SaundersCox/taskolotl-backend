@@ -78,7 +78,6 @@ public abstract class BoardItem extends BaseEntity {
   @Builder.Default
   private List<Comment> comments = new ArrayList<>();
 
-  @Setter
   @ManyToOne(optional = false)
   @JoinColumn(name = "board_id")
   private Board board;

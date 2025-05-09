@@ -3,6 +3,7 @@
 ## API Docs
 
 - http://localhost:8080/taskolotl/swagger-ui/index.html
+- http://localhost:8080/taskolotl/v3/api-docs
 
 ## Generate a Bearer Token
 

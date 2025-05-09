@@ -16,6 +16,7 @@ public class AuthController {
 
   @GetMapping("/status")
   public Map<String, Object> getAuthStatus() {
+
     return authService.getAuthenticationStatus();
   }
 }

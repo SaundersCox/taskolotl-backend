@@ -51,6 +51,14 @@ public class UserController {
     return ResponseEntity.ok(userService.getUserById(id));
   }
 
+  @Operation(summary = "Get user by OAuth2 ID")
+  @ApiResponse(responseCode = "200", description = "Success")
+  @ApiResponse(responseCode = "404", description = "Not found", content = @Content)
+  @GetMapping("/oauth/{oauthId}")
+  public ResponseEntity<UserResponseDto> getUserByOauthId(@PathVariable String oauthId) {
+    return ResponseEntity.ok(userService.getUserByOauthId(oauthId));
+  }
+
   @Operation(summary = "Get current user profile")
   @ApiResponse(responseCode = "200", description = "Success")
   @ApiResponse(responseCode = "401", description = "Unauthorized", content = @Content)

@@ -10,6 +10,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.CsrfConfigurer;
 import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
@@ -63,10 +64,14 @@ public class SecurityConfig {
             headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::disable);
           }
         })
-        .csrf(csrf -> csrf
-            // API (Stateless) & H2 Console don't need CSRF protection
-            .ignoringRequestMatchers("/api/**", isDev ? "/h2-console/**" : "")
-            .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()))
+        .csrf(csrf -> {
+          CsrfConfigurer<HttpSecurity> configurer = csrf
+              .ignoringRequestMatchers("/api/**")
+              .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse());
+          if (isDev) {
+            configurer.ignoringRequestMatchers("/h2-console/**");
+          }
+        })
         .sessionManagement(session -> session
             // Avoid sessions since we use JWT for stateless auth
             .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -84,14 +89,19 @@ public class SecurityConfig {
                   .put("token_type", "Bearer")
                   .put("expires_in", jwtService.getExpirationMs() / 1000));
             }))
-        .authorizeHttpRequests(auth -> auth
-            // Swagger UI, error page, login, OAuth2 flow endpoints
-            .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/error", "/login",
-                "/oauth2/authorization/google", isDev ? "/h2-console/**" : "").permitAll()
-            // Admin-specific endpoints
-            .requestMatchers("/api/admin/**").hasRole("ADMIN")
-            // Other API endpoints and Actuator
-            .anyRequest().authenticated())
+        .authorizeHttpRequests(auth -> {
+          // Always permitted paths
+          auth.requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/login",
+              "/oauth2/authorization/google", "/api/auth/status", "/error").permitAll();
+          // Conditionally permitted paths
+          if (isDev) {
+            auth.requestMatchers("/h2-console/**").permitAll();
+          }
+          // Admin paths
+          auth.requestMatchers("/api/admin/**").hasRole("ADMIN");
+          // All other paths
+          auth.anyRequest().authenticated();
+        })
         .build();
   }
 }
