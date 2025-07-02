@@ -3,10 +3,9 @@ package com.saunderscox.taskolotl.service;
 import com.saunderscox.taskolotl.dto.BoardCreateRequestDto;
 import com.saunderscox.taskolotl.dto.BoardResponseDto;
 import com.saunderscox.taskolotl.dto.BoardUpdateRequestDto;
+import com.saunderscox.taskolotl.entity.BaseEntity;
 import com.saunderscox.taskolotl.entity.Board;
 import com.saunderscox.taskolotl.entity.BoardItem;
-import com.saunderscox.taskolotl.entity.Role;
-import com.saunderscox.taskolotl.entity.Skill;
 import com.saunderscox.taskolotl.entity.User;
 import com.saunderscox.taskolotl.exception.ResourceNotFoundException;
 import com.saunderscox.taskolotl.mapper.BoardMapper;
@@ -14,17 +13,19 @@ import com.saunderscox.taskolotl.repository.BoardRepository;
 import com.saunderscox.taskolotl.repository.RoleRepository;
 import com.saunderscox.taskolotl.repository.SkillRepository;
 import com.saunderscox.taskolotl.repository.UserRepository;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Set;
+import java.util.UUID;
+import java.util.function.Consumer;
 
 /**
  * Service for managing board operations including CRUD operations and board-related business
@@ -83,125 +84,67 @@ public class BoardService {
 
     Board board = boardMapper.toEntity(dto);
 
-    // Add owners
-    Set<User> owners = new HashSet<>();
+    // Add owners (required)
     for (UUID ownerId : dto.getOwnerIds()) {
       User owner = userRepository.findById(ownerId)
           .orElseThrow(() -> new ResourceNotFoundException(USER_NOT_FOUND_WITH_ID + ownerId));
-      owners.add(owner);
+      board.addOwner(owner);
     }
 
     // Add members if provided
-    Set<User> members = new HashSet<>();
-    if (dto.getMemberIds() != null) {
-      for (UUID memberId : dto.getMemberIds()) {
-        User member = userRepository.findById(memberId)
-            .orElseThrow(
-                () -> new ResourceNotFoundException(USER_NOT_FOUND_WITH_ID + memberId));
-        members.add(member);
-      }
+    if (dto.getMemberIds() != null && !dto.getMemberIds().isEmpty()) {
+      updateCollection(board.getMembers(), dto.getMemberIds(), userRepository, board::addMember);
     }
 
-    // Set collections
-    owners.forEach(board::addOwner);
-    members.forEach(board::addMember);
-
     Board savedBoard = boardRepository.save(board);
-    log.info("Board created successfully with ID: {}", savedBoard.getId());
     return boardMapper.toResponseDto(savedBoard);
   }
 
-  /**
-   * Updates an existing board
-   *
-   * @param id  The board ID
-   * @param dto The update request
-   * @return The updated board as a DTO
-   * @throws ResourceNotFoundException if the board doesn't exist
-   */
   public BoardResponseDto updateBoard(UUID id, BoardUpdateRequestDto dto) {
-    log.info("Updating board with ID: {}", id);
-
     Board board = boardRepository.findById(id)
         .orElseThrow(() -> new ResourceNotFoundException(BOARD_NOT_FOUND_WITH_ID + id));
 
-    boardMapper.updateEntityFromDto(dto, board);
+    // Update basic properties
+    if (dto.getTitle() != null) {
+      board.setTitle(dto.getTitle());
+    }
+    if (dto.getDescription() != null) {
+      board.setDescription(dto.getDescription());
+    }
+    if (dto.getVisible() != null) {
+      board.setVisible(dto.getVisible());
+    }
 
-    // Update owners if provided
+    // Update collections with helper methods
     if (dto.getOwnerIds() != null) {
-      // Remove owners not in the new list
-      Set<User> currentOwners = new HashSet<>(board.getOwners());
-      for (User owner : currentOwners) {
-        if (!dto.getOwnerIds().contains(owner.getId())) {
-          board.removeOwner(owner);
-        }
-      }
-
-      // Add new owners
-      for (UUID ownerId : dto.getOwnerIds()) {
-        if (board.getOwners().stream().noneMatch(o -> o.getId().equals(ownerId))) {
-          userRepository.findById(ownerId).ifPresent(board::addOwner);
-        }
-      }
+      updateCollection(board.getOwners(), dto.getOwnerIds(), userRepository, board::addOwner);
     }
-
-    // Update members if provided
     if (dto.getMemberIds() != null) {
-      // Remove members not in the new list
-      Set<User> currentMembers = new HashSet<>(board.getMembers());
-      for (User member : currentMembers) {
-        if (!dto.getMemberIds().contains(member.getId())) {
-          board.removeMember(member);
-        }
-      }
-
-      // Add new members
-      for (UUID memberId : dto.getMemberIds()) {
-        if (board.getMembers().stream().noneMatch(m -> m.getId().equals(memberId))) {
-          userRepository.findById(memberId).ifPresent(board::addMember);
-        }
-      }
+      updateCollection(board.getMembers(), dto.getMemberIds(), userRepository, board::addMember);
     }
-
-    // Update roles if provided
     if (dto.getRoleIds() != null) {
-      // Remove roles not in the new list
-      Set<Role> currentRoles = new HashSet<>(board.getRoles());
-      for (Role role : currentRoles) {
-        if (!dto.getRoleIds().contains(role.getId())) {
-          board.removeRole(role);
-        }
-      }
-
-      // Add new roles
-      for (UUID roleId : dto.getRoleIds()) {
-        if (board.getRoles().stream().noneMatch(r -> r.getId().equals(roleId))) {
-          roleRepository.findById(roleId).ifPresent(board::addRole);
-        }
-      }
+      updateCollection(board.getRoles(), dto.getRoleIds(), roleRepository, board::addRole);
     }
-
-    // Update skills if provided
     if (dto.getSkillIds() != null) {
-      // Remove skills not in the new list
-      Set<Skill> currentSkills = new HashSet<>(board.getSkills());
-      for (Skill skill : currentSkills) {
-        if (!dto.getSkillIds().contains(skill.getId())) {
-          board.removeSkill(skill);
-        }
-      }
-
-      // Add new skills
-      for (UUID skillId : dto.getSkillIds()) {
-        if (board.getSkills().stream().noneMatch(s -> s.getId().equals(skillId))) {
-          skillRepository.findById(skillId).ifPresent(board::addSkill);
-        }
-      }
+      updateCollection(board.getSkills(), dto.getSkillIds(), skillRepository, board::addSkill);
     }
 
-    Board updatedBoard = boardRepository.save(board);
-    log.info("Board updated successfully: {}", updatedBoard.getTitle());
-    return boardMapper.toResponseDto(updatedBoard);
+    return boardMapper.toResponseDto(boardRepository.save(board));
+  }
+
+  // Cleaner generic helper with type bound
+  private <T extends BaseEntity> void updateCollection(Set<T> currentItems, Set<UUID> newItemIds,
+                                                       JpaRepository<T, UUID> repository, Consumer<T> adder) {
+    // Remove items not in new list
+    currentItems.removeIf(item -> !newItemIds.contains(item.getId()));
+
+    // Add new items
+    for (UUID id : newItemIds) {
+      boolean exists = currentItems.stream().anyMatch(item -> item.getId().equals(id));
+      if (!exists) {
+        repository.findById(id).ifPresent(adder);
+      }
+    }
   }
 
   /**

@@ -43,3 +43,5 @@ echo "Contents of ${ENTITY} files copied to clipboard!"
 Add the following VM arg to handle the Mockito agent warning:
 
 `-XX:+EnableDynamicAgentLoading`
+
+## Configuration

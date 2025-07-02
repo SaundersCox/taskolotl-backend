@@ -1,4 +1,4 @@
-package com.saunderscox.taskolotl.config;
+package com.saunderscox.taskolotl.config.web;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;

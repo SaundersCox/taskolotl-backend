@@ -19,10 +19,10 @@ spring:
       spec: maximumSize=100000,expireAfterAccess=3600s
   # In-memory H2 database for prototyping
   datasource:
-    url: jdbc:h2:file:./data/taskolotl;DB_CLOSE_ON_EXIT=FALSE # jdbc:h2:mem:taskolotl
-    driver-class-name: org.h2.Driver
-    username: sa
-    password: password
+    url: ${DB_URL:jdbc:h2:file:./data/taskolotl;DB_CLOSE_ON_EXIT=FALSE} # jdbc:h2:mem:taskolotl
+    driver-class-name: ${DB_DRIVER:org.h2.Driver}
+    username: ${DB_USERNAME:sa}
+    password: ${DB_PASSWORD:password}
   # H2 console enabled to interact with database contents
   h2:
     console:
@@ -80,17 +80,25 @@ bucket4j:
               time: 1
               unit: hours
 
+# API Docs
+springdoc:
+  api-docs:
+    resolve-schema-properties: false
+
 # Custom app properties
 app:
   project:
     version: @project.version@
   security:
-    cors:
-      allowed-origins:
-        ${ALLOWED_ORIGINS:http://localhost:4200}
     jwt:
       secret: ${JWT_SECRET}
       expiration-ms: ${JWT_EXPIRATION:86400000}
       issuer: ${JWT_ISSUER:https://plmcty.com/taskolotl}
       audience: ${JWT_AUDIENCE:taskolotl-web-client}
-    admin-emails: ${ADMIN_EMAILS:saunderscox@gmail.com}
+      providers:
+        google:
+          claim-keys:
+            - name
+            - email
+            - picture
+    admin-emails: ${ADMIN_EMAILS}
