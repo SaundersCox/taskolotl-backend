@@ -6,8 +6,8 @@ spring:
       client:
         registration:
           google:
-            client-id: ${GOOGLE_CLIENT}
-            client-secret: ${GOOGLE_SECRET}
+            client-id: ${GOOGLE_CLIENT_ID}
+            client-secret: ${GOOGLE_CLIENT_SECRET}
             scope:
               - email
               - profile
@@ -87,18 +87,9 @@ springdoc:
 
 # Custom app properties
 app:
-  project:
-    version: @project.version@
-  security:
-    jwt:
-      secret: ${JWT_SECRET}
-      expiration-ms: ${JWT_EXPIRATION:86400000}
-      issuer: ${JWT_ISSUER:https://plmcty.com/taskolotl}
-      audience: ${JWT_AUDIENCE:taskolotl-web-client}
-      providers:
-        google:
-          claim-keys:
-            - name
-            - email
-            - picture
-    admin-emails: ${ADMIN_EMAILS}
+  version: @project.version@
+
+jwt:
+  secret: ${JWT_SECRET}
+  expiration-ms: 900000  # 15 minutes
+  refresh-expiration-ms: 1209600000  # 14 days

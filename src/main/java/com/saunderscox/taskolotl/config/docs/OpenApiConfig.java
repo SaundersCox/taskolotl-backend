@@ -9,15 +9,15 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class OpenApiConfig {
 
-  @Value("${app.project.version}")
-  private String projectVersion;
+  @Value("${app.version}")
+  private String appVersion;
 
   @Bean
   public OpenAPI customOpenAPI() {
     return new OpenAPI()
         .info(new Info()
             .title("Taskolotl API")
-            .version(projectVersion)
+            .version(appVersion)
             .description("API documentation for Taskolotl application"));
   }
 }

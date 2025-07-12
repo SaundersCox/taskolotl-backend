@@ -1,10 +1,10 @@
 package com.saunderscox.taskolotl.config.security;
 
-import com.saunderscox.taskolotl.service.OAuth2UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -24,7 +24,6 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-  private final OAuth2UserService oauth2UserService;
   private final OAuth2SuccessHandler oAuth2SuccessHandler;
   private final JwtDecoder jwtDecoder;
 
@@ -36,6 +35,7 @@ public class SecurityConfig {
     boolean isDev = activeProfile.contains("dev");
 
     return http
+        // Permit frontend / Disable CSRF / Stateless Sessions
         .cors(cors -> cors
             .configurationSource(request -> {
               var config = new CorsConfiguration();
@@ -46,12 +46,11 @@ public class SecurityConfig {
         .csrf(AbstractHttpConfigurer::disable)
         .sessionManagement(session -> session
             .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-        .oauth2ResourceServer(oauth2 -> oauth2
-            .jwt(jwt -> jwt.decoder(jwtDecoder)))
+        // Authentication
+        .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()))
         .oauth2Login(oauth2 -> oauth2
-            .userInfoEndpoint(userInfo -> userInfo
-                .userService(oauth2UserService))
             .successHandler(oAuth2SuccessHandler))
+        // Authorization
         .authorizeHttpRequests(auth -> {
           auth.requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/login",
                   "/oauth2/authorization/google", "/api/auth/status", "/error")
