@@ -4,22 +4,18 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.saunderscox.taskolotl.entity.Permission;
 import com.saunderscox.taskolotl.entity.User;
 import com.saunderscox.taskolotl.repository.UserRepository;
+import com.saunderscox.taskolotl.service.AuthService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.oauth2.core.user.OAuth2User;
-import org.springframework.security.oauth2.jwt.JwtClaimsSet;
-import org.springframework.security.oauth2.jwt.JwtEncoder;
-import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.Map;
 import java.util.Objects;
 
@@ -27,7 +23,7 @@ import java.util.Objects;
 @RequiredArgsConstructor
 public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
 
-  private final JwtEncoder jwtEncoder;
+  private final AuthService authService;
   private final ObjectMapper objectMapper;
   private final UserRepository userRepository;
 
@@ -43,8 +39,9 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
     String providerName = oauth2Token.getAuthorizedClientRegistrationId();
 
     User user = findOrCreateUser(oauth2User, providerName);
-    String jwt = generateJwt(user);
-    writeTokenResponse(response, jwt);
+    String accessToken = authService.generateAccessToken(user);
+    String refreshToken = authService.generateRefreshToken(user);
+    writeTokenResponse(response, accessToken, refreshToken);
   }
 
   private User findOrCreateUser(OAuth2User oauth2User, String providerName) {
@@ -55,17 +52,14 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
     String picture = (String) attributes.get("picture");
 
     User user = userRepository.findByOauthId(oauthId)
-        .orElseGet(() -> {
-          User newUser = User.builder()
-              .email(email)
-              .username(name)
-              .oauthId(oauthId)
-              .oauthProvider(providerName)
-              .profilePictureUrl(picture)
-              .permission(Permission.USER)
-              .build();
-          return userRepository.save(newUser);
-        });
+        .orElseGet(() -> userRepository.save(User.builder()
+            .email(email)
+            .username(name)
+            .oauthId(oauthId)
+            .oauthProvider(providerName)
+            .profilePictureUrl(picture)
+            .permission(Permission.USER)
+            .build()));
 
     // Update profile picture if changed
     if (!Objects.equals(picture, user.getProfilePictureUrl())) {
@@ -76,28 +70,16 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
     return user;
   }
 
-  private String generateJwt(User user) {
-    Instant now = Instant.now();
-    JwtClaimsSet claims = JwtClaimsSet.builder()
-        .issuer("taskolotl-api")
-        .issuedAt(now)
-        .expiresAt(now.plus(15, ChronoUnit.MINUTES))
-        .subject(user.getId().toString())
-        .claim("email", user.getEmail())
-        .claim("permission", user.getPermission().name())
-        .build();
-
-    return jwtEncoder.encode(JwtEncoderParameters.from(claims)).getTokenValue();
-  }
-
-  private void writeTokenResponse(HttpServletResponse response, String jwt) throws IOException {
+  private void writeTokenResponse(HttpServletResponse response, String accessToken, String refreshToken) throws IOException {
     response.setContentType("application/json");
     response.setHeader("Cache-Control", "no-store");
 
     objectMapper.writeValue(response.getWriter(), Map.of(
-        "access_token", jwt,
+        "access_token", accessToken,
+        "refresh_token", refreshToken,
         "token_type", "Bearer",
-        "expires_in", 900
+        "expires_in", 900,
+        "refresh_expires_in", 604800
     ));
   }
 }
