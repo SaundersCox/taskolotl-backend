@@ -1,30 +1,23 @@
 package com.saunderscox.taskolotl.controller;
 
-import com.saunderscox.taskolotl.dto.UserCreateRequestDto;
-import com.saunderscox.taskolotl.dto.UserResponseDto;
-import com.saunderscox.taskolotl.dto.UserUpdateRequestDto;
+import com.saunderscox.taskolotl.dto.UserCreateRequest;
+import com.saunderscox.taskolotl.dto.UserResponse;
+import com.saunderscox.taskolotl.dto.UserUpdateRequest;
 import com.saunderscox.taskolotl.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/users")
@@ -39,7 +32,7 @@ public class UserController {
   @ApiResponse(responseCode = "403", description = "Forbidden", content = @Content)
   @GetMapping
   @PreAuthorize("hasRole('ADMIN')")
-  public ResponseEntity<Page<UserResponseDto>> getAllUsers(Pageable pageable) {
+  public ResponseEntity<Page<UserResponse>> getAllUsers(Pageable pageable) {
     return ResponseEntity.ok(userService.getAllUsers(pageable));
   }
 
@@ -47,7 +40,7 @@ public class UserController {
   @ApiResponse(responseCode = "200", description = "Success")
   @ApiResponse(responseCode = "404", description = "Not found", content = @Content)
   @GetMapping("/{id}")
-  public ResponseEntity<UserResponseDto> getUserById(@PathVariable UUID id) {
+  public ResponseEntity<UserResponse> getUserById(@PathVariable UUID id) {
     return ResponseEntity.ok(userService.getUserById(id));
   }
 
@@ -55,7 +48,7 @@ public class UserController {
   @ApiResponse(responseCode = "200", description = "Success")
   @ApiResponse(responseCode = "404", description = "Not found", content = @Content)
   @GetMapping("/oauth/{oauthId}")
-  public ResponseEntity<UserResponseDto> getUserByOauthId(@PathVariable String oauthId) {
+  public ResponseEntity<UserResponse> getUserByOauthId(@PathVariable String oauthId) {
     return ResponseEntity.ok(userService.getUserByOauthId(oauthId));
   }
 
@@ -63,7 +56,7 @@ public class UserController {
   @ApiResponse(responseCode = "200", description = "Success")
   @ApiResponse(responseCode = "401", description = "Unauthorized", content = @Content)
   @GetMapping("/me")
-  public ResponseEntity<UserResponseDto> getCurrentUser() {
+  public ResponseEntity<UserResponse> getCurrentUser() {
     return ResponseEntity.ok(userService.getCurrentUser());
   }
 
@@ -72,7 +65,7 @@ public class UserController {
   @ApiResponse(responseCode = "400", description = "Bad request", content = @Content)
   @PostMapping
   @PreAuthorize("hasRole('ADMIN')")
-  public ResponseEntity<UserResponseDto> createUser(@Valid @RequestBody UserCreateRequestDto dto) {
+  public ResponseEntity<UserResponse> createUser(@Valid @RequestBody UserCreateRequest dto) {
     return new ResponseEntity<>(userService.createUser(dto), HttpStatus.CREATED);
   }
 
@@ -81,8 +74,8 @@ public class UserController {
   @ApiResponse(responseCode = "404", description = "Not found", content = @Content)
   @PutMapping("/{id}")
   @PreAuthorize("hasRole('ADMIN') or @userService.isCurrentUser(#id)")
-  public ResponseEntity<UserResponseDto> updateUser(
-      @PathVariable UUID id, @Valid @RequestBody UserUpdateRequestDto dto) {
+  public ResponseEntity<UserResponse> updateUser(
+      @PathVariable UUID id, @Valid @RequestBody UserUpdateRequest dto) {
     return ResponseEntity.ok(userService.updateUser(id, dto));
   }
 
@@ -99,7 +92,7 @@ public class UserController {
   @Operation(summary = "Search users by query")
   @ApiResponse(responseCode = "200", description = "Success")
   @GetMapping("/search")
-  public ResponseEntity<Page<UserResponseDto>> searchUsers(
+  public ResponseEntity<Page<UserResponse>> searchUsers(
       @RequestParam String query, Pageable pageable) {
     return ResponseEntity.ok(userService.searchUsers(query, pageable));
   }
@@ -109,7 +102,7 @@ public class UserController {
   @ApiResponse(responseCode = "404", description = "Not found", content = @Content)
   @PutMapping("/{id}/skills/{skillId}")
   @PreAuthorize("hasRole('ADMIN') or @userSecurity.isCurrentUser(#id)")
-  public ResponseEntity<UserResponseDto> addSkillToUser(
+  public ResponseEntity<UserResponse> addSkillToUser(
       @PathVariable UUID id, @PathVariable UUID skillId) {
     return ResponseEntity.ok(userService.addSkillToUser(id, skillId));
   }
@@ -119,7 +112,7 @@ public class UserController {
   @ApiResponse(responseCode = "404", description = "Not found", content = @Content)
   @DeleteMapping("/{id}/skills/{skillId}")
   @PreAuthorize("hasRole('ADMIN') or @userSecurity.isCurrentUser(#id)")
-  public ResponseEntity<UserResponseDto> removeSkillFromUser(
+  public ResponseEntity<UserResponse> removeSkillFromUser(
       @PathVariable UUID id, @PathVariable UUID skillId) {
     return ResponseEntity.ok(userService.removeSkillFromUser(id, skillId));
   }
@@ -129,7 +122,7 @@ public class UserController {
   @ApiResponse(responseCode = "404", description = "Not found", content = @Content)
   @PutMapping("/{id}/roles/{roleId}")
   @PreAuthorize("hasRole('ADMIN')")
-  public ResponseEntity<UserResponseDto> addRoleToUser(
+  public ResponseEntity<UserResponse> addRoleToUser(
       @PathVariable UUID id, @PathVariable UUID roleId) {
     return ResponseEntity.ok(userService.addRoleToUser(id, roleId));
   }
@@ -139,7 +132,7 @@ public class UserController {
   @ApiResponse(responseCode = "404", description = "Not found", content = @Content)
   @DeleteMapping("/{id}/roles/{roleId}")
   @PreAuthorize("hasRole('ADMIN')")
-  public ResponseEntity<UserResponseDto> removeRoleFromUser(
+  public ResponseEntity<UserResponse> removeRoleFromUser(
       @PathVariable UUID id, @PathVariable UUID roleId) {
     return ResponseEntity.ok(userService.removeRoleFromUser(id, roleId));
   }

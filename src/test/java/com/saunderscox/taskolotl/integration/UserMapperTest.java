@@ -1,21 +1,12 @@
 package com.saunderscox.taskolotl.integration;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
-import com.saunderscox.taskolotl.dto.UserCreateRequestDto;
-import com.saunderscox.taskolotl.dto.UserResponseDto;
-import com.saunderscox.taskolotl.dto.UserUpdateRequestDto;
+import com.saunderscox.taskolotl.dto.UserCreateRequest;
+import com.saunderscox.taskolotl.dto.UserResponse;
+import com.saunderscox.taskolotl.dto.UserUpdateRequest;
 import com.saunderscox.taskolotl.entity.Role;
 import com.saunderscox.taskolotl.entity.Skill;
 import com.saunderscox.taskolotl.entity.User;
 import com.saunderscox.taskolotl.mapper.UserMapper;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -24,6 +15,12 @@ import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
+
+import java.util.*;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest
@@ -79,7 +76,7 @@ class UserMapperTest {
   @Test
   void toResponseDto_shouldMapAllFields() {
     // When
-    UserResponseDto dto = userMapper.toResponseDto(user);
+    UserResponse dto = userMapper.toResponseDto(user);
 
     // Then
     assertThat(dto)
@@ -112,7 +109,7 @@ class UserMapperTest {
     List<User> users = Arrays.asList(user, user2);
 
     // When
-    List<UserResponseDto> dtos = userMapper.toResponseDtoList(users);
+    List<UserResponse> dtos = userMapper.toResponseDtoList(users);
 
     // Then
     assertThat(dtos)
@@ -126,7 +123,7 @@ class UserMapperTest {
   @Test
   void toEntity_shouldMapCreateDtoToEntity() {
     // Given
-    UserCreateRequestDto createDto = UserCreateRequestDto.builder()
+    UserCreateRequest createDto = UserCreateRequest.builder()
         .username("newuser")
         .email("new@example.com")
         .oauthId("oauth123")
@@ -159,7 +156,7 @@ class UserMapperTest {
     String originalDescription = user.getProfileDescription();
     String originalPictureUrl = user.getProfilePictureUrl();
 
-    UserUpdateRequestDto updateDto = UserUpdateRequestDto.builder()
+    UserUpdateRequest updateDto = UserUpdateRequest.builder()
         .username(username)
         .profileDescription(description)
         .profilePictureUrl(pictureUrl)

@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class FriendshipUpdateRequestDto {
+public class FriendshipUpdateRequest {
 
   private FriendshipStatus friendshipStatus;
   private Boolean blocked;

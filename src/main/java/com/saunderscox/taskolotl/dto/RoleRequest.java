@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class RoleRequestDto {
+public class RoleRequest {
 
   @NotBlank(message = "Name is required")
   @Size(max = 100, message = "Name cannot exceed 100 characters")

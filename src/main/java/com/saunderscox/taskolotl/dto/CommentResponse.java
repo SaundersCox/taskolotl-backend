@@ -1,24 +1,23 @@
 package com.saunderscox.taskolotl.dto;
 
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
+import java.util.Set;
+import java.util.UUID;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @SuperBuilder
 @EqualsAndHashCode(callSuper = true)
-public class SkillResponseDto extends BaseDto {
+public class CommentResponse extends BaseResponse {
 
-  private String name;
+  private UUID authorId;
+  private UUID boardItemId;
   private String description;
-  private Set<UUID> userIds;
-  private Set<UUID> boardIds;
-  private List<UUID> conceptIds;
+  private Set<String> tags;
 }

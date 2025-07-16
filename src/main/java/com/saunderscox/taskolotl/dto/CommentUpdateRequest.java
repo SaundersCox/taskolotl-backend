@@ -6,15 +6,16 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.Set;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class SkillUpdateRequestDto {
+public class CommentUpdateRequest {
 
-  @Size(max = 100, message = "Skill name cannot exceed 100 characters")
-  private String name;
-
-  @Size(max = 500, message = "Skill description cannot exceed 500 characters")
+  @Size(min = 1, max = 1000, message = "Description must be between 1 and 1000 characters")
   private String description;
+
+  private Set<String> tags;
 }

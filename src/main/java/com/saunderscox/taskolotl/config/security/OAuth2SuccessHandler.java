@@ -8,6 +8,7 @@ import com.saunderscox.taskolotl.service.AuthService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.oauth2.core.user.OAuth2User;
@@ -20,6 +21,7 @@ import java.util.Map;
 import java.util.Objects;
 
 @Component
+@Slf4j
 @RequiredArgsConstructor
 public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
 
@@ -52,14 +54,21 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
     String picture = (String) attributes.get("picture");
 
     User user = userRepository.findByOauthId(oauthId)
-        .orElseGet(() -> userRepository.save(User.builder()
-            .email(email)
-            .username(name)
-            .oauthId(oauthId)
-            .oauthProvider(providerName)
-            .profilePictureUrl(picture)
-            .permission(Permission.USER)
-            .build()));
+        .map(existingUser -> {
+          log.info("User authenticated with email {}", email);
+          return existingUser;
+        })
+        .orElseGet(() -> {
+          log.info("User created & authenticated with email: {}", email);
+          return userRepository.save(User.builder()
+              .email(email)
+              .username(name)
+              .oauthId(oauthId)
+              .oauthProvider(providerName)
+              .profilePictureUrl(picture)
+              .permission(Permission.USER)
+              .build());
+        });
 
     // Update profile picture if changed
     if (!Objects.equals(picture, user.getProfilePictureUrl())) {

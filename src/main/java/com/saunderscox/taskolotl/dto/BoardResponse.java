@@ -1,20 +1,21 @@
 package com.saunderscox.taskolotl.dto;
 
 import com.saunderscox.taskolotl.entity.BoardType;
-import java.util.Set;
-import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
+import java.util.Set;
+import java.util.UUID;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @SuperBuilder
 @EqualsAndHashCode(callSuper = true)
-public class BoardResponseDto extends BaseDto {
+public class BoardResponse extends BaseResponse {
 
   private String title;
   private BoardType boardType;

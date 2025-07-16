@@ -7,16 +7,20 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.UUID;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class SkillCreateRequestDto {
+public class ConceptRequest {
 
-  @NotBlank(message = "Skill name is required")
-  @Size(max = 100, message = "Skill name cannot exceed 100 characters")
+  @NotBlank(message = "Name is required")
+  @Size(max = 100, message = "Name cannot exceed 100 characters")
   private String name;
 
-  @Size(max = 500, message = "Skill description cannot exceed 500 characters")
+  @Size(max = 1000, message = "Description cannot exceed 1000 characters")
   private String description;
+
+  private UUID skillId;
 }

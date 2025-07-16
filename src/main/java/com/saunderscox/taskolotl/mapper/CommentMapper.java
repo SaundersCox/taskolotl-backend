@@ -1,8 +1,8 @@
 //package com.saunderscox.taskolotl.mapper;
 //
-//import com.saunderscox.taskolotl.dto.CommentCreateRequestDto;
-//import com.saunderscox.taskolotl.dto.CommentResponseDto;
-//import com.saunderscox.taskolotl.dto.CommentUpdateRequestDto;
+//import com.saunderscox.taskolotl.dto.CommentCreateRequest;
+//import com.saunderscox.taskolotl.dto.CommentResponse;
+//import com.saunderscox.taskolotl.dto.CommentUpdateRequest;
 //import com.saunderscox.taskolotl.entity.BoardItem;
 //import com.saunderscox.taskolotl.entity.Comment;
 //import com.saunderscox.taskolotl.service.BoardItemService;
@@ -28,15 +28,15 @@
 //
 //  @Mapping(target = "authorId", source = "author.id")
 //  @Mapping(target = "boardItemId", source = "boardItem.id")
-//  public abstract CommentResponseDto toResponseDto(Comment comment);
+//  public abstract CommentResponse toResponseDto(Comment comment);
 //
-//  public abstract List<CommentResponseDto> toResponseDtoList(List<Comment> comments);
+//  public abstract List<CommentResponse> toResponseDtoList(List<Comment> comments);
 //
 //  @Mapping(target = "author", source = "authorId")
 //  @Mapping(target = "boardItem", source = "boardItemId")
-//  public abstract Comment toEntity(CommentCreateRequestDto createDto);
+//  public abstract Comment toEntity(CommentCreateRequest createDto);
 //
-//  public abstract void updateEntityFromDto(CommentUpdateRequestDto updateDto,
+//  public abstract void updateEntityFromDto(CommentUpdateRequest updateDto,
 //      @MappingTarget Comment comment);
 //
 //  // Entity resolution methods using services

@@ -3,18 +3,19 @@ package com.saunderscox.taskolotl.dto;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-import java.util.Set;
-import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.Set;
+import java.util.UUID;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class CommentCreateRequestDto {
+public class CommentCreateRequest {
 
   @NotNull(message = "Author ID is required")
   private UUID authorId;

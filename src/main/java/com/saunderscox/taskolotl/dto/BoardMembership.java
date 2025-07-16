@@ -1,16 +1,17 @@
 package com.saunderscox.taskolotl.dto;
 
-import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.UUID;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class BoardMembershipDto {
+public class BoardMembership {
 
   private UUID userId;
   private UUID boardId;

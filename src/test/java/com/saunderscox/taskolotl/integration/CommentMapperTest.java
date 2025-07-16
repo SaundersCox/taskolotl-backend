@@ -4,9 +4,9 @@
 //import static org.mockito.Mockito.mock;
 //import static org.mockito.Mockito.when;
 //
-//import com.saunderscox.taskolotl.dto.CommentCreateRequestDto;
-//import com.saunderscox.taskolotl.dto.CommentResponseDto;
-//import com.saunderscox.taskolotl.dto.CommentUpdateRequestDto;
+//import com.saunderscox.taskolotl.dto.CommentCreateRequest;
+//import com.saunderscox.taskolotl.dto.CommentResponse;
+//import com.saunderscox.taskolotl.dto.CommentUpdateRequest;
 //import com.saunderscox.taskolotl.entity.BoardItem;
 //import com.saunderscox.taskolotl.entity.Comment;
 //import com.saunderscox.taskolotl.entity.User;
@@ -67,7 +67,7 @@
 //  @Test
 //  void toResponseDto_shouldMapAllFields() {
 //    // When
-//    CommentResponseDto dto = commentMapper.toResponseDto(comment);
+//    CommentResponse dto = commentMapper.toResponseDto(comment);
 //
 //    // Then
 //    assertThat(dto)
@@ -101,7 +101,7 @@
 //    List<Comment> comments = Arrays.asList(comment, comment2);
 //
 //    // When
-//    List<CommentResponseDto> dtos = commentMapper.toResponseDtoList(comments);
+//    List<CommentResponse> dtos = commentMapper.toResponseDtoList(comments);
 //
 //    // Then
 //    assertThat(dtos)
@@ -116,7 +116,7 @@
 //  void toEntity_shouldMapCreateDtoToEntity() {
 //    // Given
 //    Set<String> newTags = new HashSet<>(Arrays.asList("priority", "backend"));
-//    CommentCreateRequestDto createDto = CommentCreateRequestDto.builder()
+//    CommentCreateRequest createDto = CommentCreateRequest.builder()
 //        .authorId(UUID.randomUUID())
 //        .boardItemId(UUID.randomUUID())
 //        .description("New comment from DTO")
@@ -155,7 +155,7 @@
 //    Set<String> newTags = includeTags ?
 //        new HashSet<>(Arrays.asList("updated", "review")) : null;
 //
-//    CommentUpdateRequestDto updateDto = CommentUpdateRequestDto.builder()
+//    CommentUpdateRequest updateDto = CommentUpdateRequest.builder()
 //        .description(description)
 //        .tags(newTags)
 //        .build();

@@ -1,5 +1,7 @@
 package com.saunderscox.taskolotl.config.security;
 
+import io.jsonwebtoken.io.Decoders;
+import io.jsonwebtoken.security.Keys;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -7,12 +9,15 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 
+import javax.crypto.SecretKey;
 import java.util.List;
 
 /**
@@ -24,11 +29,21 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
+  private final JwtAuthenticationFilter jwtAuthenticationFilter;
   private final OAuth2SuccessHandler oAuth2SuccessHandler;
-  private final JwtDecoder jwtDecoder;
 
   @Value("${spring.profiles.active}")
   private String activeProfile;
+
+  @Value("${jwt.secret}")
+  private String jwtSecret;
+
+  @Bean
+  public JwtDecoder jwtDecoder() {
+    byte[] keyBytes = Decoders.BASE64.decode(jwtSecret);
+    SecretKey secretKey = Keys.hmacShaKeyFor(keyBytes);
+    return NimbusJwtDecoder.withSecretKey(secretKey).build();
+  }
 
   @Bean
   public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -37,25 +52,39 @@ public class SecurityConfig {
     return http
         // Permit frontend / Disable CSRF / Stateless Sessions
         .cors(cors -> cors
-            .configurationSource(request -> {
-              var config = new CorsConfiguration();
-              config.setAllowedOriginPatterns(List.of(isDev ? "http://localhost:*" : "https://plmcty.com"));
-              config.applyPermitDefaultValues();
-              return config;
-            }))
-        .csrf(AbstractHttpConfigurer::disable)
+            .configurationSource(request -> new CorsConfiguration()
+                .applyPermitDefaultValues()
+                .setAllowedOriginPatterns(List.of(isDev ? "http://localhost:*" : "https://plmcty.com"))
+            ))
+        .csrf(csrf -> csrf
+            .ignoringRequestMatchers("/h2-console/**"))
+        .headers(headers -> headers
+            .frameOptions(isDev ?
+                HeadersConfigurer.FrameOptionsConfig::sameOrigin :
+                HeadersConfigurer.FrameOptionsConfig::disable)
+        )
         .sessionManagement(session -> session
             .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         // Authentication
+        .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
         .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()))
         .oauth2Login(oauth2 -> oauth2
             .successHandler(oAuth2SuccessHandler))
         // Authorization
         .authorizeHttpRequests(auth -> {
-          auth.requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/login",
-                  "/oauth2/authorization/google", "/api/auth/status", "/error")
+          // Public Endpoints (Must come first)
+          auth.requestMatchers(
+                  "/api/auth/**",
+                  "/error",
+                  "/login",
+                  "/oauth2/authorization/google",
+                  "/swagger-ui/**",
+                  "/v3/api-docs/**"
+              )
               .permitAll()
-              .requestMatchers("/api/admin/**").hasRole("ADMIN");
+              // User Role Endpoints
+              .requestMatchers("/api/admin/**").hasRole("ADMIN")
+              .requestMatchers("/api/**").hasRole("USER");
           if (isDev) {
             auth.requestMatchers("/h2-console/**").permitAll();
           }
@@ -63,5 +92,4 @@ public class SecurityConfig {
         })
         .build();
   }
-
 }

@@ -1,20 +1,21 @@
 package com.saunderscox.taskolotl.dto;
 
 import com.saunderscox.taskolotl.entity.TaskStage;
-import java.time.Instant;
-import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
+import java.time.Instant;
+import java.util.UUID;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @SuperBuilder
 @EqualsAndHashCode(callSuper = true)
-public class TaskResponseDto extends BoardItemResponseDto {
+public class TaskResponse extends BoardItemResponse {
 
   private TaskStage taskStage;
   private Instant dueDate;

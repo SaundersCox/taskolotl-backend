@@ -2,7 +2,6 @@ package com.saunderscox.taskolotl.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
-import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -12,14 +11,12 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class ConceptRequestDto {
+public class SkillCreateRequest {
 
-  @NotBlank(message = "Name is required")
-  @Size(max = 100, message = "Name cannot exceed 100 characters")
+  @NotBlank(message = "Skill name is required")
+  @Size(max = 100, message = "Skill name cannot exceed 100 characters")
   private String name;
 
-  @Size(max = 1000, message = "Description cannot exceed 1000 characters")
+  @Size(max = 500, message = "Skill description cannot exceed 500 characters")
   private String description;
-
-  private UUID skillId;
 }

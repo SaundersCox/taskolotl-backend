@@ -1,8 +1,8 @@
 package com.saunderscox.taskolotl.service;
 
-import com.saunderscox.taskolotl.dto.BoardCreateRequestDto;
-import com.saunderscox.taskolotl.dto.BoardResponseDto;
-import com.saunderscox.taskolotl.dto.BoardUpdateRequestDto;
+import com.saunderscox.taskolotl.dto.BoardCreateRequest;
+import com.saunderscox.taskolotl.dto.BoardResponse;
+import com.saunderscox.taskolotl.dto.BoardUpdateRequest;
 import com.saunderscox.taskolotl.entity.*;
 import com.saunderscox.taskolotl.exception.ResourceNotFoundException;
 import com.saunderscox.taskolotl.mapper.BoardMapper;
@@ -41,18 +41,18 @@ public class BoardService {
   private final BoardMapper boardMapper;
   private final AuthService authService;
 
-  public Page<BoardResponseDto> getAllBoards(Pageable pageable) {
+  public Page<BoardResponse> getAllBoards(Pageable pageable) {
     return boardRepository.findAll(pageable)
         .map(boardMapper::toResponseDto);
   }
 
-  public BoardResponseDto getBoardById(UUID id) {
+  public BoardResponse getBoardById(UUID id) {
     Board board = boardRepository.findById(id)
         .orElseThrow(() -> new ResourceNotFoundException(BOARD_NOT_FOUND_WITH_ID + id));
     return boardMapper.toResponseDto(board);
   }
 
-  public BoardResponseDto createBoard(BoardCreateRequestDto dto) {
+  public BoardResponse createBoard(BoardCreateRequest dto) {
     log.info("Creating board '{}' with {} owners", dto.getTitle(), dto.getOwnerIds().size());
 
     Board board = boardMapper.toEntity(dto);
@@ -69,7 +69,7 @@ public class BoardService {
     return boardMapper.toResponseDto(savedBoard);
   }
 
-  public BoardResponseDto updateBoard(UUID id, BoardUpdateRequestDto dto) {
+  public BoardResponse updateBoard(UUID id, BoardUpdateRequest dto) {
     Board board = boardRepository.findById(id)
         .orElseThrow(() -> new ResourceNotFoundException(BOARD_NOT_FOUND_WITH_ID + id));
 
@@ -191,23 +191,23 @@ public class BoardService {
     boardRepository.deleteById(id);
   }
 
-  public Page<BoardResponseDto> searchBoards(String query, Pageable pageable) {
+  public Page<BoardResponse> searchBoards(String query, Pageable pageable) {
     log.debug("Searching boards: query='{}', page={}", query, pageable.getPageNumber());
     return boardRepository.findByTitleContainingIgnoreCase(query, pageable)
         .map(boardMapper::toResponseDto);
   }
 
-  public Page<BoardResponseDto> getBoardsByOwner(UUID userId, Pageable pageable) {
+  public Page<BoardResponse> getBoardsByOwner(UUID userId, Pageable pageable) {
     return boardRepository.findByOwnersId(userId, pageable)
         .map(boardMapper::toResponseDto);
   }
 
-  public Page<BoardResponseDto> getBoardsByMember(UUID userId, Pageable pageable) {
+  public Page<BoardResponse> getBoardsByMember(UUID userId, Pageable pageable) {
     return boardRepository.findByMembersId(userId, pageable)
         .map(boardMapper::toResponseDto);
   }
 
-  public Page<BoardResponseDto> getAccessibleBoards(UUID userId, Pageable pageable) {
+  public Page<BoardResponse> getAccessibleBoards(UUID userId, Pageable pageable) {
     log.debug("Fetching accessible boards for user {}", userId);
     return boardRepository.findByOwnersIdOrMembersId(userId, userId, pageable)
         .map(boardMapper::toResponseDto);
@@ -224,9 +224,7 @@ public class BoardService {
   }
 
   public boolean currentUserHasAccess(UUID boardId) {
-    return authService.getCurrentUser()
-        .map(user -> hasAccess(boardId, user.getId()))
-        .orElse(false);
+    return hasAccess(boardId, authService.getCurrentUser().getId());
   }
 
   public void moveItemToPosition(UUID boardId, UUID boardItemId, int newPosition) {

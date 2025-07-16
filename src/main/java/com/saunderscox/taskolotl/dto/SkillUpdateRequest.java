@@ -1,8 +1,6 @@
 package com.saunderscox.taskolotl.dto;
 
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -12,11 +10,11 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class FriendshipCreateRequestDto {
+public class SkillUpdateRequest {
 
-  @NotNull(message = "Self ID is required")
-  private UUID selfId;
+  @Size(max = 100, message = "Skill name cannot exceed 100 characters")
+  private String name;
 
-  @NotNull(message = "Target ID is required")
-  private UUID targetId;
+  @Size(max = 500, message = "Skill description cannot exceed 500 characters")
+  private String description;
 }

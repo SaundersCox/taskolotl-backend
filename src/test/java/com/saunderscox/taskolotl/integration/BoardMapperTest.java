@@ -1,33 +1,22 @@
 package com.saunderscox.taskolotl.integration;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
-import com.saunderscox.taskolotl.dto.BoardCreateRequestDto;
-import com.saunderscox.taskolotl.dto.BoardResponseDto;
-import com.saunderscox.taskolotl.dto.BoardUpdateRequestDto;
-import com.saunderscox.taskolotl.entity.Board;
-import com.saunderscox.taskolotl.entity.BoardItem;
-import com.saunderscox.taskolotl.entity.BoardType;
-import com.saunderscox.taskolotl.entity.Role;
-import com.saunderscox.taskolotl.entity.Skill;
-import com.saunderscox.taskolotl.entity.User;
+import com.saunderscox.taskolotl.dto.BoardCreateRequest;
+import com.saunderscox.taskolotl.dto.BoardResponse;
+import com.saunderscox.taskolotl.dto.BoardUpdateRequest;
+import com.saunderscox.taskolotl.entity.*;
 import com.saunderscox.taskolotl.mapper.BoardMapper;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
+
+import java.util.*;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest
@@ -102,17 +91,17 @@ class BoardMapperTest {
   @Test
   void toResponseDto_shouldMapAllFields() {
     // When
-    BoardResponseDto dto = boardMapper.toResponseDto(testBoard);
+    BoardResponse dto = boardMapper.toResponseDto(testBoard);
 
     // Then
     assertThat(dto)
         .isNotNull()
         .extracting(
-            BoardResponseDto::getId,
-            BoardResponseDto::getTitle,
-            BoardResponseDto::getBoardType,
-            BoardResponseDto::getDescription,
-            BoardResponseDto::isVisible)
+            BoardResponse::getId,
+            BoardResponse::getTitle,
+            BoardResponse::getBoardType,
+            BoardResponse::getDescription,
+            BoardResponse::isVisible)
         .containsExactly(
             boardId,
             "Test Board",
@@ -148,20 +137,20 @@ class BoardMapperTest {
     boards.add(testBoard);
 
     // When
-    List<BoardResponseDto> dtos = boardMapper.toResponseDtoList(boards);
+    List<BoardResponse> dtos = boardMapper.toResponseDtoList(boards);
 
     // Then
     assertThat(dtos)
         .hasSize(1)
         .first()
-        .extracting(BoardResponseDto::getId)
+        .extracting(BoardResponse::getId)
         .isEqualTo(boardId);
   }
 
   @Test
   void toEntity_shouldMapBasicFields() {
     // Given
-    BoardCreateRequestDto createDto = new BoardCreateRequestDto();
+    BoardCreateRequest createDto = new BoardCreateRequest();
     createDto.setTitle("New Board");
     createDto.setBoardType(BoardType.STUDY);
     createDto.setDescription("New Description");
@@ -208,7 +197,7 @@ class BoardMapperTest {
     when(board.getDescription()).thenReturn("Original Description");
     when(board.isVisible()).thenReturn(true);
 
-    BoardUpdateRequestDto updateDto = new BoardUpdateRequestDto();
+    BoardUpdateRequest updateDto = new BoardUpdateRequest();
     updateDto.setTitle("Updated Title");
     // Description is not set, should not be updated
     updateDto.setVisible(false);

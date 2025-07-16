@@ -1,8 +1,8 @@
 package com.saunderscox.taskolotl.controller;
 
-import com.saunderscox.taskolotl.dto.BoardCreateRequestDto;
-import com.saunderscox.taskolotl.dto.BoardResponseDto;
-import com.saunderscox.taskolotl.dto.BoardUpdateRequestDto;
+import com.saunderscox.taskolotl.dto.BoardCreateRequest;
+import com.saunderscox.taskolotl.dto.BoardResponse;
+import com.saunderscox.taskolotl.dto.BoardUpdateRequest;
 import com.saunderscox.taskolotl.service.BoardService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -34,7 +34,7 @@ public class BoardController {
   @Operation(summary = "Get all boards")
   @Tag(name = "Board - CRUD")
   @PageableAsQueryParam
-  public ResponseEntity<Page<BoardResponseDto>> getAllBoards(
+  public ResponseEntity<Page<BoardResponse>> getAllBoards(
       Pageable pageable) {
     return ResponseEntity.ok(boardService.getAllBoards(pageable));
   }
@@ -43,7 +43,7 @@ public class BoardController {
   @Operation(summary = "Get a board by ID")
   @Tag(name = "Board - CRUD")
   @ApiResponse(responseCode = "404", description = "Board not found")
-  public ResponseEntity<BoardResponseDto> getBoardById(
+  public ResponseEntity<BoardResponse> getBoardById(
       @PathVariable UUID id) {
     return ResponseEntity.ok(boardService.getBoardById(id));
   }
@@ -52,9 +52,9 @@ public class BoardController {
   @Operation(summary = "Create a new board")
   @Tag(name = "Board - CRUD")
   @ApiResponse(responseCode = "400", description = "Invalid input")
-  public ResponseEntity<BoardResponseDto> createBoard(
-      @Valid @RequestBody BoardCreateRequestDto dto) {
-    BoardResponseDto result = boardService.createBoard(dto);
+  public ResponseEntity<BoardResponse> createBoard(
+      @Valid @RequestBody BoardCreateRequest dto) {
+    BoardResponse result = boardService.createBoard(dto);
     return ResponseEntity.status(HttpStatus.CREATED).body(result);
   }
 
@@ -65,9 +65,9 @@ public class BoardController {
   @ApiResponse(responseCode = "400", description = "Invalid input")
   @ApiResponse(responseCode = "403", description = "Forbidden")
   @ApiResponse(responseCode = "404", description = "Board not found")
-  public ResponseEntity<BoardResponseDto> updateBoard(
+  public ResponseEntity<BoardResponse> updateBoard(
       @PathVariable UUID id,
-      @Valid @RequestBody BoardUpdateRequestDto dto) {
+      @Valid @RequestBody BoardUpdateRequest dto) {
     return ResponseEntity.ok(boardService.updateBoard(id, dto));
   }
 
@@ -89,7 +89,7 @@ public class BoardController {
   @Tag(name = "Board - Search")
   @ApiResponse(responseCode = "400", description = "Invalid search query")
   @PageableAsQueryParam
-  public ResponseEntity<Page<BoardResponseDto>> searchBoards(
+  public ResponseEntity<Page<BoardResponse>> searchBoards(
       @RequestParam @NotBlank @Size(min = 2, max = 100) String query,
       Pageable pageable) {
     return ResponseEntity.ok(boardService.searchBoards(query, pageable));
@@ -100,7 +100,7 @@ public class BoardController {
   @Operation(summary = "Get boards by owner")
   @Tag(name = "Board - User Queries")
   @PageableAsQueryParam
-  public ResponseEntity<Page<BoardResponseDto>> getBoardsByOwner(
+  public ResponseEntity<Page<BoardResponse>> getBoardsByOwner(
       @PathVariable UUID userId,
       Pageable pageable) {
     return ResponseEntity.ok(boardService.getBoardsByOwner(userId, pageable));
@@ -110,7 +110,7 @@ public class BoardController {
   @Operation(summary = "Get boards by member")
   @Tag(name = "Board - User Queries")
   @PageableAsQueryParam
-  public ResponseEntity<Page<BoardResponseDto>> getBoardsByMember(
+  public ResponseEntity<Page<BoardResponse>> getBoardsByMember(
       @PathVariable UUID userId,
       Pageable pageable) {
     return ResponseEntity.ok(boardService.getBoardsByMember(userId, pageable));
@@ -120,7 +120,7 @@ public class BoardController {
   @Operation(summary = "Get accessible boards")
   @Tag(name = "Board - User Queries")
   @PageableAsQueryParam
-  public ResponseEntity<Page<BoardResponseDto>> getAccessibleBoards(
+  public ResponseEntity<Page<BoardResponse>> getAccessibleBoards(
       @PathVariable UUID userId,
       Pageable pageable) {
     return ResponseEntity.ok(boardService.getAccessibleBoards(userId, pageable));

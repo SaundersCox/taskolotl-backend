@@ -1,8 +1,8 @@
 package com.saunderscox.taskolotl.service;
 
-import com.saunderscox.taskolotl.dto.UserCreateRequestDto;
-import com.saunderscox.taskolotl.dto.UserResponseDto;
-import com.saunderscox.taskolotl.dto.UserUpdateRequestDto;
+import com.saunderscox.taskolotl.dto.UserCreateRequest;
+import com.saunderscox.taskolotl.dto.UserResponse;
+import com.saunderscox.taskolotl.dto.UserUpdateRequest;
 import com.saunderscox.taskolotl.entity.Role;
 import com.saunderscox.taskolotl.entity.Skill;
 import com.saunderscox.taskolotl.entity.User;
@@ -11,8 +11,6 @@ import com.saunderscox.taskolotl.mapper.UserMapper;
 import com.saunderscox.taskolotl.repository.RoleRepository;
 import com.saunderscox.taskolotl.repository.SkillRepository;
 import com.saunderscox.taskolotl.repository.UserRepository;
-import java.util.HashSet;
-import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -21,6 +19,9 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.HashSet;
+import java.util.UUID;
 
 /**
  * Service for managing user operations including CRUD operations and user-related business logic.
@@ -54,7 +55,7 @@ public class UserService {
    *
    * @return List of all users as DTOs
    */
-  public Page<UserResponseDto> getAllUsers(Pageable pageable) {
+  public Page<UserResponse> getAllUsers(Pageable pageable) {
     log.debug("Fetching all users");
     return userRepository.findAll(pageable)
         .map(userMapper::toResponseDto);
@@ -67,7 +68,7 @@ public class UserService {
    * @return The user as a DTO
    * @throws ResourceNotFoundException if the user doesn't exist
    */
-  public UserResponseDto getUserById(UUID id) {
+  public UserResponse getUserById(UUID id) {
     log.debug("Fetching user with ID: {}", id);
     User user = userRepository.findById(id)
         .orElseThrow(() -> new ResourceNotFoundException(USER_NOT_FOUND_WITH_ID + id));
@@ -81,7 +82,7 @@ public class UserService {
    * @return The user as a DTO
    * @throws ResourceNotFoundException if the user doesn't exist
    */
-  public UserResponseDto getUserByEmail(String email) {
+  public UserResponse getUserByEmail(String email) {
     log.debug("Fetching user with email: {}", email);
     User user = userRepository.findByEmailIgnoreCase(email)
         .orElseThrow(() -> new ResourceNotFoundException("User not found with email: " + email));
@@ -95,7 +96,7 @@ public class UserService {
    * @return The created user as a DTO
    * @throws IllegalArgumentException if email or username already exists
    */
-  public UserResponseDto createUser(UserCreateRequestDto dto) {
+  public UserResponse createUser(UserCreateRequest dto) {
     log.info("Creating new user with username: {}", dto.getUsername());
 
     // Check if email or username already exists
@@ -127,7 +128,7 @@ public class UserService {
    * @throws ResourceNotFoundException if the user doesn't exist
    * @throws IllegalArgumentException  if username is already taken by another user
    */
-  public UserResponseDto updateUser(UUID id, UserUpdateRequestDto dto) {
+  public UserResponse updateUser(UUID id, UserUpdateRequest dto) {
     log.info("Updating user with ID: {}", id);
 
     User user = userRepository.findById(id)
@@ -173,7 +174,7 @@ public class UserService {
    * @param query The search query
    * @return List of matching users as DTOs
    */
-  public Page<UserResponseDto> searchUsers(String query, Pageable pageable) {
+  public Page<UserResponse> searchUsers(String query, Pageable pageable) {
     log.debug("Searching users with query: {} and pagination: page={}, size={}",
         query, pageable.getPageNumber(), pageable.getPageSize());
 
@@ -190,7 +191,7 @@ public class UserService {
    * @return The updated user as a DTO
    * @throws ResourceNotFoundException if the user or skill doesn't exist
    */
-  public UserResponseDto addSkillToUser(UUID userId, UUID skillId) {
+  public UserResponse addSkillToUser(UUID userId, UUID skillId) {
     log.info("Adding skill {} to user {}", skillId, userId);
 
     User user = userRepository.findById(userId)
@@ -213,7 +214,7 @@ public class UserService {
    * @return The updated user as a DTO
    * @throws ResourceNotFoundException if the user doesn't exist
    */
-  public UserResponseDto removeSkillFromUser(UUID userId, UUID skillId) {
+  public UserResponse removeSkillFromUser(UUID userId, UUID skillId) {
     log.info("Removing skill {} from user {}", skillId, userId);
 
     User user = userRepository.findById(userId)
@@ -233,7 +234,7 @@ public class UserService {
    * @return The updated user as a DTO
    * @throws ResourceNotFoundException if the user or role doesn't exist
    */
-  public UserResponseDto addRoleToUser(UUID userId, UUID roleId) {
+  public UserResponse addRoleToUser(UUID userId, UUID roleId) {
     log.info("Adding role {} to user {}", roleId, userId);
 
     User user = userRepository.findById(userId)
@@ -256,7 +257,7 @@ public class UserService {
    * @return The updated user as a DTO
    * @throws ResourceNotFoundException if the user doesn't exist
    */
-  public UserResponseDto removeRoleFromUser(UUID userId, UUID roleId) {
+  public UserResponse removeRoleFromUser(UUID userId, UUID roleId) {
     log.info("Removing role {} from user {}", roleId, userId);
 
     User user = userRepository.findById(userId)
@@ -275,7 +276,7 @@ public class UserService {
    * @return The user as a DTO
    * @throws ResourceNotFoundException if the user doesn't exist
    */
-  public UserResponseDto getUserByOauthId(String oauthId) {
+  public UserResponse getUserByOauthId(String oauthId) {
     log.debug("Fetching user with OAuth2 ID: {}", oauthId);
     User user = userRepository.findByOauthId(oauthId)
         .orElseThrow(() -> new ResourceNotFoundException(USER_NOT_FOUND_WITH_ID + oauthId));
@@ -288,7 +289,7 @@ public class UserService {
    * @return The current user as a DTO
    * @throws ResourceNotFoundException if the user doesn't exist
    */
-  public UserResponseDto getCurrentUser() {
+  public UserResponse getCurrentUser() {
     Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     String oauthId = authentication.getName();
     return getUserByOauthId(oauthId);
