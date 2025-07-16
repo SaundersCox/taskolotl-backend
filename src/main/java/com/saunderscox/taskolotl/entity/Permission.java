@@ -4,8 +4,8 @@ import org.springframework.security.core.GrantedAuthority;
 
 public enum Permission implements GrantedAuthority {
   USER("USER"),
-  ADMIN("ADMIN"),
-  MODERATOR("MODERATOR");
+  MODERATOR("MODERATOR"),
+  ADMIN("ADMIN");
 
   private final String name;
 
