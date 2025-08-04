@@ -7,15 +7,15 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @Configuration
 public class WebMvcConfig implements WebMvcConfigurer {
 
-  private final LoggingInterceptor loggingInterceptor;
+  private final LogInterceptor logInterceptor;
 
-  public WebMvcConfig(LoggingInterceptor loggingInterceptor) {
-    this.loggingInterceptor = loggingInterceptor;
+  public WebMvcConfig(LogInterceptor logInterceptor) {
+    this.logInterceptor = logInterceptor;
   }
 
   @Override
   public void addInterceptors(InterceptorRegistry registry) {
-    registry.addInterceptor(loggingInterceptor)
+    registry.addInterceptor(logInterceptor)
         .addPathPatterns("/**")  // Apply to all paths
         .excludePathPatterns("/actuator/**", "/h2-console/**");
   }

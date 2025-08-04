@@ -8,8 +8,8 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class RefreshTokenRequest {
+public class GoogleTokenRequest {
 
-  @NotBlank(message = "Refresh token is required")
-  private String refreshToken;
+  @NotBlank(message = "Token is required")
+  private String googleToken;
 }

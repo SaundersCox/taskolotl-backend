@@ -1,6 +1,5 @@
 package com.saunderscox.taskolotl.dto;
 
-import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -8,8 +7,9 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class RefreshTokenRequest {
+public class AuthResponse {
 
-  @NotBlank(message = "Refresh token is required")
+  private static final String TOKEN_TYPE = "Bearer";
+  private String accessToken;
   private String refreshToken;
 }

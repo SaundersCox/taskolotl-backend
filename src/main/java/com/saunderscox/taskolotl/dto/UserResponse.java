@@ -1,13 +1,11 @@
 package com.saunderscox.taskolotl.dto;
 
+import com.saunderscox.taskolotl.entity.Team;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
-
-import java.util.Set;
-import java.util.UUID;
 
 @Data
 @NoArgsConstructor
@@ -22,6 +20,6 @@ public class UserResponse extends BaseResponse {
   private String profilePictureUrl;
   private String oauthProvider;
   private String oauthId;
-  private Set<UUID> skillIds;
-  private Set<UUID> roleIds;
+  private String permission;
+  private Team team;
 }

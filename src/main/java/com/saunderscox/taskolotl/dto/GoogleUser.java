@@ -1,6 +1,5 @@
 package com.saunderscox.taskolotl.dto;
 
-import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -8,8 +7,10 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class RefreshTokenRequest {
-
-  @NotBlank(message = "Refresh token is required")
-  private String refreshToken;
+public class GoogleUser {
+  private String id;
+  private String email;
+  private String name;
+  private String pictureUrl;
+  private boolean emailVerified;
 }

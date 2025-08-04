@@ -44,6 +44,15 @@ cat \
 echo "Contents of security files copied to clipboard!"
 ```
 
+```bash
+BASE_DIR="src/main/java/com/saunderscox/taskolotl"
+
+# Find and concatenate all .java files recursively and copy to clipboard
+find "$BASE_DIR" -name "*.java" -type f -exec cat {} \; | clip
+
+echo "Contents of all .java files under $BASE_DIR copied to clipboard!"
+```
+
 ## Versioning
 
 - fix: → Patch release (1.0.0 → 1.0.1)

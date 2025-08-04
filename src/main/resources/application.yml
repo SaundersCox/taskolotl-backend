@@ -1,6 +1,9 @@
 spring:
   application:
     name: taskolotl
+  profiles:
+    active: ${ENV:dev}
+
   security:
     oauth2:
       client:
@@ -8,82 +11,57 @@ spring:
           google:
             client-id: ${GOOGLE_CLIENT_ID}
             client-secret: ${GOOGLE_CLIENT_SECRET}
-            scope:
-              openid,profile,email
-  # In-memory Bucket4j + Caffeine caching
-  cache:
-    cache-names:
-      - rate-limit-buckets
-    caffeine:
-      spec: maximumSize=100000,expireAfterAccess=3600s
-  # In-memory H2 database for prototyping
-  datasource:
-    url: ${DB_URL:jdbc:h2:file:./data/taskolotl;DB_CLOSE_ON_EXIT=FALSE} # jdbc:h2:mem:taskolotl
-    driver-class-name: ${DB_DRIVER:org.h2.Driver}
-    username: ${DB_USERNAME:sa}
-    password: ${DB_PASSWORD:password}
-  # H2 console enabled to interact with database contents
-  h2:
-    console:
-      enabled: true
-      path: /h2-console
-  # Create tables on start, drop tables on shutdown, run SQL scripts after Hibernate creates schema
+            scope: openid,profile,email
+      resourceserver:
+        jwt:
+          issuer-uri: https://accounts.google.com
+
+  #  cache:
+  #    cache-names: [rate-limit-buckets]
+  #    caffeine:
+  #      spec: maximumSize=100000,expireAfterAccess=3600s
+
   jpa:
-    hibernate:
-      ddl-auto: update
     defer-datasource-initialization: true
     open-in-view: false
-  #    show-sql: true
+
   sql:
     init:
       mode: ALWAYS
 
-# Actuator
-management:
-  endpoints:
-    web:
-      exposure:
-        include: "*"
-  endpoint:
-    health:
-      show-details: ALWAYS
+#management:
+#  endpoints:
+#    web:
+#      exposure:
+#        include: health,metrics
 
-bucket4j:
-  enabled: true
-  filters:
-    - cache-name: rate-limit-buckets
-      url: /api.*
-      strategy: first
-      http-response-body: "{ \"status\": 429, \"error\": \"Too Many Requests\", \"message\": \"You have exhausted your API Request Quota\" }"
-      rate-limits:
-        - cache-key: "getHeader('X-api-key')"
-          execute-condition: "getHeader('X-api-key').startsWith('PX001-')"
-          bandwidths:
-            - capacity: 100
-              time: 1
-              unit: hours
-        - cache-key: "getHeader('X-api-key')"
-          execute-condition: "getHeader('X-api-key').startsWith('BX001-')"
-          bandwidths:
-            - capacity: 40
-              time: 1
-              unit: hours
-        - cache-key: "getHeader('X-api-key')"
-          bandwidths:
-            - capacity: 20
-              time: 1
-              unit: hours
+#bucket4j:
+#  enabled: true
+#  filters:
+#    - cache-name: rate-limit-buckets
+#      url: /api.*
+#      strategy: first
+#      http-response-body: '{"status": 429, "error": "Too Many Requests", "message": "Rate limit exceeded"}'
+#      rate-limits:
+#        - cache-key: "getRemoteAddr()"
+#          bandwidths:
+#            - capacity: 20
+#              time: 1
+#              unit: hours
 
-# API Docs
 springdoc:
   api-docs:
     resolve-schema-properties: false
 
-# Custom app properties
 app:
   version: @project.version@
+  token:
+    jwt-secret: ${JWT_SECRET}
+    issuer: https://taskolotl.com
+    access-token-expiration: 900000
+    refresh-token-expiration: 604800000
 
-jwt:
-  secret: ${JWT_SECRET}
-  expiration-ms: 900000  # 15 minutes
-  refresh-expiration-ms: 1209600000  # 14 days
+logging:
+  level:
+    org.springframework.security: DEBUG
+    com.saunderscox.taskolotl: DEBUG
