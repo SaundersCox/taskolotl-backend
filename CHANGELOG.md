@@ -1,3 +1,13 @@
+# [1.4.0](https://github.com/SaundersCox/taskolotl-backend/compare/v1.3.0...v1.4.0) (2025-07-16)
+
+
+### Features
+
+* **all:** Refactor and Updated Board ([5bc24b0](https://github.com/SaundersCox/taskolotl-backend/commit/5bc24b09d82b7e6582b240552aa3b282aed5e12b))
+* **all:** Reworked security, docs, and some of board ([a189336](https://github.com/SaundersCox/taskolotl-backend/commit/a189336ac0fff2959d9a987a477643a02741dd3c))
+* **all:** Security works as expected, DTO naming removed ([940811c](https://github.com/SaundersCox/taskolotl-backend/commit/940811cb835597adac58b8254055be6d6b2aaee5))
+* **all:** Simplified security ([8c6d631](https://github.com/SaundersCox/taskolotl-backend/commit/8c6d63174d167a01e8c0ca5c5255221c9a293d26))
+
 # [1.3.0](https://github.com/SaundersCox/taskolotl-backend/compare/v1.2.0...v1.3.0) (2025-05-09)
 
 
