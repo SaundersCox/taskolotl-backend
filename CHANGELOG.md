@@ -1,3 +1,11 @@
+# [1.5.0](https://github.com/SaundersCox/taskolotl-backend/compare/v1.4.0...v1.5.0) (2025-08-04)
+
+
+### Features
+
+* **all:** Added JWT filter, Updated GitHub actions, POM reordering, UserResponse update ([c84eb6a](https://github.com/SaundersCox/taskolotl-backend/commit/c84eb6aadbc395ce3deb1bb8753a54bd319237cb))
+* **all:** Security revamp ([8724865](https://github.com/SaundersCox/taskolotl-backend/commit/87248652d579af796a72ef3fe26be42c4dde8935))
+
 # [1.4.0](https://github.com/SaundersCox/taskolotl-backend/compare/v1.3.0...v1.4.0) (2025-07-16)
 
 
