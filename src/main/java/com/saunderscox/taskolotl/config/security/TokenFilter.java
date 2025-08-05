@@ -20,7 +20,7 @@ import java.util.UUID;
 
 
 /**
- * Authorize users with User ID as the Security Context principal per request using JWT
+ * Authorizes users with User ID as the Security Context principal per request using JWT
  */
 @Component
 @Slf4j

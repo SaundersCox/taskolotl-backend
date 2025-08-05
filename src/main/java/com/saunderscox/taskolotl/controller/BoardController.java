@@ -5,7 +5,6 @@ import com.saunderscox.taskolotl.dto.BoardResponse;
 import com.saunderscox.taskolotl.dto.BoardUpdateRequest;
 import com.saunderscox.taskolotl.service.BoardService;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
@@ -42,7 +41,6 @@ public class BoardController {
   @GetMapping("/{id}")
   @Operation(summary = "Get a board by ID")
   @Tag(name = "Board - CRUD")
-  @ApiResponse(responseCode = "404", description = "Board not found")
   public ResponseEntity<BoardResponse> getBoardById(
       @PathVariable UUID id) {
     return ResponseEntity.ok(boardService.getBoardById(id));
@@ -51,7 +49,6 @@ public class BoardController {
   @PostMapping
   @Operation(summary = "Create a new board")
   @Tag(name = "Board - CRUD")
-  @ApiResponse(responseCode = "400", description = "Invalid input")
   public ResponseEntity<BoardResponse> createBoard(
       @Valid @RequestBody BoardCreateRequest dto) {
     BoardResponse result = boardService.createBoard(dto);
@@ -62,9 +59,6 @@ public class BoardController {
   @PreAuthorize("@boardService.currentUserHasAccess(#id)")
   @Operation(summary = "Update a board")
   @Tag(name = "Board - CRUD")
-  @ApiResponse(responseCode = "400", description = "Invalid input")
-  @ApiResponse(responseCode = "403", description = "Forbidden")
-  @ApiResponse(responseCode = "404", description = "Board not found")
   public ResponseEntity<BoardResponse> updateBoard(
       @PathVariable UUID id,
       @Valid @RequestBody BoardUpdateRequest dto) {
@@ -75,8 +69,6 @@ public class BoardController {
   @PreAuthorize("@boardService.currentUserHasAccess(#id)")
   @Operation(summary = "Delete a board")
   @Tag(name = "Board - CRUD")
-  @ApiResponse(responseCode = "403", description = "Forbidden")
-  @ApiResponse(responseCode = "404", description = "Board not found")
   public ResponseEntity<Void> deleteBoard(
       @PathVariable UUID id) {
     boardService.deleteBoard(id);
@@ -87,7 +79,6 @@ public class BoardController {
   @GetMapping("/search")
   @Operation(summary = "Search boards")
   @Tag(name = "Board - Search")
-  @ApiResponse(responseCode = "400", description = "Invalid search query")
   @PageableAsQueryParam
   public ResponseEntity<Page<BoardResponse>> searchBoards(
       @RequestParam @NotBlank @Size(min = 2, max = 100) String query,
@@ -131,8 +122,6 @@ public class BoardController {
   @PreAuthorize("@boardService.currentUserHasAccess(#boardId)")
   @Operation(summary = "Move a board item")
   @Tag(name = "Board - Operations")
-  @ApiResponse(responseCode = "403", description = "Forbidden")
-  @ApiResponse(responseCode = "404", description = "Board or item not found")
   public ResponseEntity<Void> moveItemToPosition(
       @PathVariable UUID boardId,
       @PathVariable UUID boardItemId,

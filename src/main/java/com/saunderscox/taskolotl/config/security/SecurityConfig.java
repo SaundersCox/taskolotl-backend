@@ -22,7 +22,15 @@ import javax.crypto.spec.SecretKeySpec;
 import java.util.List;
 
 /**
- * Configures CORS, CSRF, OAuth2, and authorization using Spring Security's built-in JWT support.
+ * Handles authentication and authorization
+ * <ul>
+ *   <li>CORS to allow frontend access</li>
+ *   <li>CSRF disabled because API is stateless</li>
+ *   <li>Frames enabled in dev to access H2 Console</li>
+ *   <li>Validates auth code from the OAuth2 provider, finds or creates a user, and returns tokens</li>
+ *   <li>Signs and parses tokens with secret & HMAC-SHA256 symmetric key</li>
+ *   <li>Allows endpoints for auth, health, docs, </li>
+ * </ul> OAuth2, and authorization using Spring Security's built-in JWT support.
  * Ensures sessions are stateless.
  */
 @Configuration
@@ -31,21 +39,12 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-  private final TokenFilter tokenFilter;
   private final SuccessHandler successHandler;
+  private final TokenProps tokenProps;
+  private final TokenFilter tokenFilter;
 
   @Value("${spring.profiles.active}")
   private String activeProfile;
-
-  @Value("${jwt.secret}")
-  private String jwtSecret;
-
-  @Bean
-  public JwtDecoder jwtDecoder() {
-    byte[] keyBytes = Decoders.BASE64.decode(jwtSecret);
-    SecretKey secretKey = new SecretKeySpec(keyBytes, "HmacSHA256");
-    return NimbusJwtDecoder.withSecretKey(secretKey).build();
-  }
 
   @Bean
   public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -68,14 +67,14 @@ public class SecurityConfig {
         .sessionManagement(session -> session
             .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         // Authentication
-        .addFilterBefore(tokenFilter, BasicAuthenticationFilter.class)
         .oauth2Login(oauth2 -> oauth2
             .successHandler(successHandler))
         .oauth2ResourceServer(oauth2 -> oauth2
             .jwt(jwt -> jwt.decoder(jwtDecoder())))
+        .addFilterBefore(tokenFilter, BasicAuthenticationFilter.class)
         // Authorization
         .authorizeHttpRequests(auth -> {
-          auth.requestMatchers("/api/auth/**", "/actuator/health", "/error", "/swagger-ui/**", "/v3/api-docs/**")
+          auth.requestMatchers("/api/auth/**", "/actuator/health", "/swagger-ui/**", "/v3/api-docs/**")
               .permitAll();
           if (isDev) {
             auth.requestMatchers("/h2-console/**").permitAll();
@@ -83,5 +82,12 @@ public class SecurityConfig {
           auth.requestMatchers("/api/**").authenticated();
         })
         .build();
+  }
+
+  @Bean
+  public JwtDecoder jwtDecoder() {
+    byte[] keyBytes = Decoders.BASE64.decode(tokenProps.getJwtSecret());
+    SecretKey secretKey = new SecretKeySpec(keyBytes, "HmacSHA256");
+    return NimbusJwtDecoder.withSecretKey(secretKey).build();
   }
 }

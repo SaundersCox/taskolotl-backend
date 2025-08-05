@@ -33,8 +33,6 @@ public class SuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
   public void onAuthenticationSuccess(
       HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException {
 
-    log.debug("Authentication successful");
-
     if (!(authentication instanceof OAuth2AuthenticationToken oauth2Token)) {
       log.error("Invalid authentication type");
       response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid authentication type");
@@ -62,7 +60,7 @@ public class SuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
       response.setCharacterEncoding("UTF-8");
       objectMapper.writeValue(response.getWriter(), authService.userIdToAuthResponse(userId));
 
-      log.info("OAuth2 authentication successful for user: {} - {} (id: {}) via {}",
+      log.info("Authenticated [name:{}][email:{}][id:{}][provider:{}]",
           name, email, userId, provider);
     } catch (Exception e) {
       log.error("Error processing OAuth2 authentication", e);
