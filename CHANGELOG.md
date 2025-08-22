@@ -1,3 +1,10 @@
+## [1.6.1](https://github.com/SaundersCox/taskolotl-backend/compare/v1.6.0...v1.6.1) (2025-08-22)
+
+
+### Bug Fixes
+
+* **api:** better validation error messages on query params for board ([c8cc3ad](https://github.com/SaundersCox/taskolotl-backend/commit/c8cc3adaea9985cb39b1ae34d10bf43bc0bdbfdc))
+
 # [1.6.0](https://github.com/SaundersCox/taskolotl-backend/compare/v1.5.0...v1.6.0) (2025-08-22)
 
 
