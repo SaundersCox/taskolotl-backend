@@ -1,3 +1,15 @@
+# [1.6.0](https://github.com/SaundersCox/taskolotl-backend/compare/v1.5.0...v1.6.0) (2025-08-22)
+
+
+### Bug Fixes
+
+* **auth:** Further refine and document ([b496477](https://github.com/SaundersCox/taskolotl-backend/commit/b496477c4f51f40fc3691c445c717e738292cdcc))
+
+
+### Features
+
+* **api:** Set defaults for token expiration, better validation error handling in JSON responses, simplified formatting exception code ([f682301](https://github.com/SaundersCox/taskolotl-backend/commit/f6823016d998786e2d76835eaee6cafb52c3ade3))
+
 # [1.5.0](https://github.com/SaundersCox/taskolotl-backend/compare/v1.4.0...v1.5.0) (2025-08-04)
 
 
