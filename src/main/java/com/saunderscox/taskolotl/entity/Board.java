@@ -12,7 +12,9 @@ import java.util.*;
  * skills. A board serves as the primary organizational unit.
  */
 @Entity
-@Table(name = "boards", indexes = {@Index(name = "idx_board_title", columnList = "title")})
+@Table(name = "boards",
+  indexes = {@Index(name = "idx_board_title", columnList = "title")},
+  uniqueConstraints = @UniqueConstraint(columnNames = {"title"}, name = "uk_title"))
 @NoArgsConstructor
 @AllArgsConstructor
 @SuperBuilder
@@ -20,7 +22,7 @@ import java.util.*;
 @EqualsAndHashCode(callSuper = true)
 public class Board extends BaseEntity {
 
-  @Column(nullable = false, length = 100)
+  @Column(nullable = false, unique = true, length = 100)
   @NotBlank
   @Setter
   private String title;
@@ -91,14 +93,10 @@ public class Board extends BaseEntity {
     // Update positions of affected items
     if (newPosition < currentPosition) {
       // Moving up - shift items down
-      boardItems.stream()
-          .filter(i -> i.getPosition() >= newPosition && i.getPosition() < currentPosition)
-          .forEach(i -> i.setPosition(i.getPosition() + 1));
+      boardItems.stream().filter(i -> i.getPosition() >= newPosition && i.getPosition() < currentPosition).forEach(i -> i.setPosition(i.getPosition() + 1));
     } else if (newPosition > currentPosition) {
       // Moving down - shift items up
-      boardItems.stream()
-          .filter(i -> i.getPosition() <= newPosition && i.getPosition() > currentPosition)
-          .forEach(i -> i.setPosition(i.getPosition() - 1));
+      boardItems.stream().filter(i -> i.getPosition() <= newPosition && i.getPosition() > currentPosition).forEach(i -> i.setPosition(i.getPosition() - 1));
     }
 
     // Set new position
