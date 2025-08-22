@@ -6,6 +6,9 @@ import com.saunderscox.taskolotl.dto.BoardUpdateRequest;
 import com.saunderscox.taskolotl.service.BoardService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
 import org.springdoc.core.converters.models.PageableAsQueryParam;
@@ -14,16 +17,16 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import javax.validation.Valid;
-import javax.validation.constraints.NotBlank;
 import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/boards")
 @RequiredArgsConstructor
 @Tag(name = "Board", description = "Board management API")
+@Validated
 public class BoardController {
 
   private final BoardService boardService;
@@ -34,7 +37,7 @@ public class BoardController {
   @Tag(name = "Board - CRUD")
   @PageableAsQueryParam
   public ResponseEntity<Page<BoardResponse>> getAllBoards(
-      Pageable pageable) {
+    Pageable pageable) {
     return ResponseEntity.ok(boardService.getAllBoards(pageable));
   }
 
@@ -42,7 +45,7 @@ public class BoardController {
   @Operation(summary = "Get a board by ID")
   @Tag(name = "Board - CRUD")
   public ResponseEntity<BoardResponse> getBoardById(
-      @PathVariable UUID id) {
+    @PathVariable UUID id) {
     return ResponseEntity.ok(boardService.getBoardById(id));
   }
 
@@ -50,7 +53,7 @@ public class BoardController {
   @Operation(summary = "Create a new board")
   @Tag(name = "Board - CRUD")
   public ResponseEntity<BoardResponse> createBoard(
-      @Valid @RequestBody BoardCreateRequest dto) {
+    @Valid @RequestBody BoardCreateRequest dto) {
     BoardResponse result = boardService.createBoard(dto);
     return ResponseEntity.status(HttpStatus.CREATED).body(result);
   }
@@ -60,8 +63,8 @@ public class BoardController {
   @Operation(summary = "Update a board")
   @Tag(name = "Board - CRUD")
   public ResponseEntity<BoardResponse> updateBoard(
-      @PathVariable UUID id,
-      @Valid @RequestBody BoardUpdateRequest dto) {
+    @PathVariable UUID id,
+    @Valid @RequestBody BoardUpdateRequest dto) {
     return ResponseEntity.ok(boardService.updateBoard(id, dto));
   }
 
@@ -70,7 +73,7 @@ public class BoardController {
   @Operation(summary = "Delete a board")
   @Tag(name = "Board - CRUD")
   public ResponseEntity<Void> deleteBoard(
-      @PathVariable UUID id) {
+    @PathVariable UUID id) {
     boardService.deleteBoard(id);
     return ResponseEntity.noContent().build();
   }
@@ -81,8 +84,10 @@ public class BoardController {
   @Tag(name = "Board - Search")
   @PageableAsQueryParam
   public ResponseEntity<Page<BoardResponse>> searchBoards(
-      @RequestParam @NotBlank @Size(min = 2, max = 100) String query,
-      Pageable pageable) {
+    @RequestParam @NotBlank(message = "Search query cannot be empty")
+    @Size(min = 3, max = 100, message = "Search query must be between 3 and 100 characters")
+    String query,
+    Pageable pageable) {
     return ResponseEntity.ok(boardService.searchBoards(query, pageable));
   }
 
@@ -92,8 +97,8 @@ public class BoardController {
   @Tag(name = "Board - User Queries")
   @PageableAsQueryParam
   public ResponseEntity<Page<BoardResponse>> getBoardsByOwner(
-      @PathVariable UUID userId,
-      Pageable pageable) {
+    @PathVariable UUID userId,
+    Pageable pageable) {
     return ResponseEntity.ok(boardService.getBoardsByOwner(userId, pageable));
   }
 
@@ -102,8 +107,8 @@ public class BoardController {
   @Tag(name = "Board - User Queries")
   @PageableAsQueryParam
   public ResponseEntity<Page<BoardResponse>> getBoardsByMember(
-      @PathVariable UUID userId,
-      Pageable pageable) {
+    @PathVariable UUID userId,
+    Pageable pageable) {
     return ResponseEntity.ok(boardService.getBoardsByMember(userId, pageable));
   }
 
@@ -112,8 +117,8 @@ public class BoardController {
   @Tag(name = "Board - User Queries")
   @PageableAsQueryParam
   public ResponseEntity<Page<BoardResponse>> getAccessibleBoards(
-      @PathVariable UUID userId,
-      Pageable pageable) {
+    @PathVariable UUID userId,
+    Pageable pageable) {
     return ResponseEntity.ok(boardService.getAccessibleBoards(userId, pageable));
   }
 
@@ -123,9 +128,9 @@ public class BoardController {
   @Operation(summary = "Move a board item")
   @Tag(name = "Board - Operations")
   public ResponseEntity<Void> moveItemToPosition(
-      @PathVariable UUID boardId,
-      @PathVariable UUID boardItemId,
-      @RequestParam int position) {
+    @PathVariable UUID boardId,
+    @PathVariable UUID boardItemId,
+    @RequestParam @Min(value = 0, message = "Position must be a non-negative number") int position) {
     boardService.moveItemToPosition(boardId, boardItemId, position);
     return ResponseEntity.ok().build();
   }
