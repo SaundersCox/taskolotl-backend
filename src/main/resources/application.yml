@@ -16,6 +16,11 @@ spring:
         jwt:
           issuer-uri: https://accounts.google.com
 
+  data:
+    web:
+      pageable:
+        max-page-size: 100
+
   #  cache:
   #    cache-names: [rate-limit-buckets]
   #    caffeine:
