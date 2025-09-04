@@ -1,3 +1,10 @@
+## [1.6.2](https://github.com/SaundersCox/taskolotl-backend/compare/v1.6.1...v1.6.2) (2025-09-04)
+
+
+### Bug Fixes
+
+* **api:** added max page size 100, made local config for h2 db, added postgres sql dependency ([fc87765](https://github.com/SaundersCox/taskolotl-backend/commit/fc877655fba6b52d6619b58fc85cadb3cc982715))
+
 ## [1.6.1](https://github.com/SaundersCox/taskolotl-backend/compare/v1.6.0...v1.6.1) (2025-08-22)
 
 
