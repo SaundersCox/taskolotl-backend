@@ -1,0 +1,68 @@
+spring:
+  application:
+    name: taskolotl
+  profiles:
+    active: test
+
+  # Use H2 for tests instead of your production database
+  datasource:
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+
+  # Simplified security for tests
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: test-client-id
+            client-secret: test-client-secret
+            scope: openid,profile,email
+      resourceserver:
+        jwt:
+          issuer-uri: https://accounts.google.com
+
+  # Keep pagination settings
+  data:
+    web:
+      pageable:
+        max-page-size: 100
+
+  # JPA test settings
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+    defer-datasource-initialization: true
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: true
+
+  # Initialize test data
+  sql:
+    init:
+      mode: EMBEDDED
+
+# Disable API docs in tests
+springdoc:
+  api-docs:
+    enabled: false
+
+# App-specific test settings
+app:
+  version: test-version
+  token:
+    jwt-secret: test-jwt-secret-that-is-at-least-32-characters-long
+    issuer: https://test.taskolotl.com
+    access-token-expiration: 900000
+    refresh-token-expiration: 604800000
+
+# Set appropriate logging levels for tests
+logging:
+  level:
+    org.springframework.security: ERROR
+    com.saunderscox.taskolotl: DEBUG
+    org.hibernate.SQL: DEBUG

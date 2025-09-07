@@ -59,7 +59,7 @@ public class BoardController {
   }
 
   @PutMapping("/{id}")
-  @PreAuthorize("@boardService.currentUserHasAccess(#id)")
+  @PreAuthorize("@boardService.hasAccess(#id, authentication.principal.id)")
   @Operation(summary = "Update a board")
   @Tag(name = "Board - CRUD")
   public ResponseEntity<BoardResponse> updateBoard(
@@ -69,7 +69,7 @@ public class BoardController {
   }
 
   @DeleteMapping("/{id}")
-  @PreAuthorize("@boardService.currentUserHasAccess(#id)")
+  @PreAuthorize("@boardService.hasValue(#id, authentication.principal.id)")
   @Operation(summary = "Delete a board")
   @Tag(name = "Board - CRUD")
   public ResponseEntity<Void> deleteBoard(
@@ -124,7 +124,7 @@ public class BoardController {
 
   // Specialized Operations
   @PostMapping("/{boardId}/items/{boardItemId}/move")
-  @PreAuthorize("@boardService.currentUserHasAccess(#boardId)")
+  @PreAuthorize("@boardService.hasAccess(#boardId, authentication.principal.id)")
   @Operation(summary = "Move a board item")
   @Tag(name = "Board - Operations")
   public ResponseEntity<Void> moveItemToPosition(

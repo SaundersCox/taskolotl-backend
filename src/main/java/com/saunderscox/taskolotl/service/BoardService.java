@@ -12,6 +12,8 @@ import com.saunderscox.taskolotl.repository.SkillRepository;
 import com.saunderscox.taskolotl.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -22,13 +24,8 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-/**
- * Service for managing board operations including CRUD operations and board-related business
- * logic.
- */
 @Service
 @RequiredArgsConstructor
-@Transactional
 @Slf4j
 public class BoardService {
 
@@ -41,17 +38,21 @@ public class BoardService {
   private final BoardMapper boardMapper;
   private final AuthService authService;
 
+  @Transactional(readOnly = true)
   public Page<BoardResponse> getAllBoards(Pageable pageable) {
     return boardRepository.findAll(pageable)
-        .map(boardMapper::toResponseDto);
+      .map(boardMapper::toResponseDto);
   }
 
+  @Transactional(readOnly = true)
+  @Cacheable(value = "boardCache", key = "#id")
   public BoardResponse getBoardById(UUID id) {
     Board board = boardRepository.findById(id)
-        .orElseThrow(() -> new ResourceNotFoundException(BOARD_NOT_FOUND_WITH_ID + id));
+      .orElseThrow(() -> new ResourceNotFoundException(BOARD_NOT_FOUND_WITH_ID + id));
     return boardMapper.toResponseDto(board);
   }
 
+  @Transactional
   public BoardResponse createBoard(BoardCreateRequest dto) {
     log.info("Creating board '{}' with {} owners", dto.getTitle(), dto.getOwnerIds().size());
 
@@ -69,19 +70,13 @@ public class BoardService {
     return boardMapper.toResponseDto(savedBoard);
   }
 
+  @Transactional
+  @CacheEvict(value = "boardCache", key = "#id")
   public BoardResponse updateBoard(UUID id, BoardUpdateRequest dto) {
     Board board = boardRepository.findById(id)
-        .orElseThrow(() -> new ResourceNotFoundException(BOARD_NOT_FOUND_WITH_ID + id));
+      .orElseThrow(() -> new ResourceNotFoundException(BOARD_NOT_FOUND_WITH_ID + id));
 
-    if (dto.getTitle() != null) {
-      board.setTitle(dto.getTitle());
-    }
-    if (dto.getDescription() != null) {
-      board.setDescription(dto.getDescription());
-    }
-    if (dto.getVisible() != null) {
-      board.setVisible(dto.getVisible());
-    }
+    boardMapper.updateEntityFromDto(dto, board);
 
     updateOwners(board, dto.getOwnerIds());
     updateMembers(board, dto.getMemberIds());
@@ -155,8 +150,8 @@ public class BoardService {
     if (foundUsers.size() != requestedIds.size()) {
       Set<UUID> foundIds = foundUsers.stream().map(User::getId).collect(Collectors.toSet());
       Set<UUID> missingIds = requestedIds.stream()
-          .filter(id -> !foundIds.contains(id))
-          .collect(Collectors.toSet());
+        .filter(id -> !foundIds.contains(id))
+        .collect(Collectors.toSet());
       throw new ResourceNotFoundException("Users not found with ids: " + missingIds);
     }
   }
@@ -165,8 +160,8 @@ public class BoardService {
     if (foundRoles.size() != requestedIds.size()) {
       Set<UUID> foundIds = foundRoles.stream().map(Role::getId).collect(Collectors.toSet());
       Set<UUID> missingIds = requestedIds.stream()
-          .filter(id -> !foundIds.contains(id))
-          .collect(Collectors.toSet());
+        .filter(id -> !foundIds.contains(id))
+        .collect(Collectors.toSet());
       throw new ResourceNotFoundException("Roles not found with ids: " + missingIds);
     }
   }
@@ -175,12 +170,14 @@ public class BoardService {
     if (foundSkills.size() != requestedIds.size()) {
       Set<UUID> foundIds = foundSkills.stream().map(Skill::getId).collect(Collectors.toSet());
       Set<UUID> missingIds = requestedIds.stream()
-          .filter(id -> !foundIds.contains(id))
-          .collect(Collectors.toSet());
+        .filter(id -> !foundIds.contains(id))
+        .collect(Collectors.toSet());
       throw new ResourceNotFoundException("Skills not found with ids: " + missingIds);
     }
   }
 
+  @Transactional
+  @CacheEvict(value = "boardCache", key = "#id")
   public void deleteBoard(UUID id) {
     log.info("Deleting board {}", id);
 
@@ -191,57 +188,60 @@ public class BoardService {
     boardRepository.deleteById(id);
   }
 
+  @Transactional(readOnly = true)
   public Page<BoardResponse> searchBoards(String query, Pageable pageable) {
     log.debug("Searching boards: query='{}', page={}", query, pageable.getPageNumber());
     return boardRepository.findByTitleContainingIgnoreCase(query, pageable)
-        .map(boardMapper::toResponseDto);
+      .map(boardMapper::toResponseDto);
   }
 
+  @Transactional(readOnly = true)
   public Page<BoardResponse> getBoardsByOwner(UUID userId, Pageable pageable) {
     return boardRepository.findByOwnersId(userId, pageable)
-        .map(boardMapper::toResponseDto);
+      .map(boardMapper::toResponseDto);
   }
 
+  @Transactional(readOnly = true)
   public Page<BoardResponse> getBoardsByMember(UUID userId, Pageable pageable) {
     return boardRepository.findByMembersId(userId, pageable)
-        .map(boardMapper::toResponseDto);
+      .map(boardMapper::toResponseDto);
   }
 
+  @Transactional(readOnly = true)
   public Page<BoardResponse> getAccessibleBoards(UUID userId, Pageable pageable) {
     log.debug("Fetching accessible boards for user {}", userId);
     return boardRepository.findByOwnersIdOrMembersId(userId, userId, pageable)
-        .map(boardMapper::toResponseDto);
+      .map(boardMapper::toResponseDto);
   }
 
+  @Transactional(readOnly = true)
   public boolean hasAccess(UUID boardId, UUID userId) {
     Board board = boardRepository.findById(boardId)
-        .orElseThrow(() -> new ResourceNotFoundException(BOARD_NOT_FOUND_WITH_ID + boardId));
+      .orElseThrow(() -> new ResourceNotFoundException(BOARD_NOT_FOUND_WITH_ID + boardId));
 
     User user = userRepository.findById(userId)
-        .orElseThrow(() -> new ResourceNotFoundException(USER_NOT_FOUND_WITH_ID + userId));
+      .orElseThrow(() -> new ResourceNotFoundException(USER_NOT_FOUND_WITH_ID + userId));
 
     return board.hasAccess(user);
   }
 
-  public boolean currentUserHasAccess(UUID boardId) {
-    return hasAccess(boardId, authService.getCurrentUser().getId());
-  }
-
+  @Transactional
+  @CacheEvict(value = "boardCache", key = "#boardId")
   public void moveItemToPosition(UUID boardId, UUID boardItemId, int newPosition) {
     log.info("Moving item {} to position {} on board {}", boardItemId, newPosition, boardId);
 
     Board board = boardRepository.findById(boardId)
-        .orElseThrow(() -> new ResourceNotFoundException(BOARD_NOT_FOUND_WITH_ID + boardId));
+      .orElseThrow(() -> new ResourceNotFoundException(BOARD_NOT_FOUND_WITH_ID + boardId));
 
     BoardItem item = board.getBoardItems().stream()
-        .filter(i -> i.getId().equals(boardItemId))
-        .findFirst()
-        .orElseThrow(
-            () -> new ResourceNotFoundException("Board item not found with id: " + boardItemId));
+      .filter(i -> i.getId().equals(boardItemId))
+      .findFirst()
+      .orElseThrow(
+        () -> new ResourceNotFoundException("Board item not found with id: " + boardItemId));
 
     if (newPosition < 0 || newPosition >= board.getBoardItems().size()) {
       throw new IllegalArgumentException(
-          "Invalid position: " + newPosition + ". Must be between 0 and " + (board.getBoardItems().size() - 1));
+        "Invalid position: " + newPosition + ". Must be between 0 and " + (board.getBoardItems().size() - 1));
     }
 
     board.moveItemToPosition(item, newPosition);

@@ -5,10 +5,11 @@ import com.saunderscox.taskolotl.dto.BoardResponse;
 import com.saunderscox.taskolotl.dto.BoardUpdateRequest;
 import com.saunderscox.taskolotl.entity.*;
 import com.saunderscox.taskolotl.mapper.BoardMapper;
+import com.saunderscox.taskolotl.mapper.BoardMapperImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.mapstruct.factory.Mappers;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
@@ -19,11 +20,10 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(SpringExtension.class)
-@SpringBootTest
+@SpringBootTest(classes = {BoardMapperImpl.class})
 class BoardMapperTest {
 
-  @Autowired
-  private BoardMapper boardMapper;
+  private final BoardMapper boardMapper = Mappers.getMapper(BoardMapper.class);
 
   private Board testBoard;
   private UUID boardId;
@@ -36,7 +36,6 @@ class BoardMapperTest {
   @BeforeEach
   void setUp() {
 
-    // Create test data
     boardId = UUID.randomUUID();
 
     owner = mock(User.class);
@@ -95,39 +94,39 @@ class BoardMapperTest {
 
     // Then
     assertThat(dto)
-        .isNotNull()
-        .extracting(
-            BoardResponse::getId,
-            BoardResponse::getTitle,
-            BoardResponse::getBoardType,
-            BoardResponse::getDescription,
-            BoardResponse::isVisible)
-        .containsExactly(
-            boardId,
-            "Test Board",
-            BoardType.TASK,
-            "Test Description",
-            true);
+      .isNotNull()
+      .extracting(
+        BoardResponse::getId,
+        BoardResponse::getTitle,
+        BoardResponse::getBoardType,
+        BoardResponse::getDescription,
+        BoardResponse::isVisible)
+      .containsExactly(
+        boardId,
+        "Test Board",
+        BoardType.TASK,
+        "Test Description",
+        true);
 
     assertThat(dto.getOwnerIds())
-        .hasSize(1)
-        .contains(owner.getId());
+      .hasSize(1)
+      .contains(owner.getId());
 
     assertThat(dto.getMemberIds())
-        .hasSize(1)
-        .contains(member.getId());
+      .hasSize(1)
+      .contains(member.getId());
 
     assertThat(dto.getBoardItemIds())
-        .hasSize(1)
-        .contains(boardItem.getId());
+      .hasSize(1)
+      .contains(boardItem.getId());
 
     assertThat(dto.getRoleIds())
-        .hasSize(1)
-        .contains(role.getId());
+      .hasSize(1)
+      .contains(role.getId());
 
     assertThat(dto.getSkillIds())
-        .hasSize(1)
-        .contains(skill.getId());
+      .hasSize(1)
+      .contains(skill.getId());
   }
 
   @Test
@@ -141,10 +140,10 @@ class BoardMapperTest {
 
     // Then
     assertThat(dtos)
-        .hasSize(1)
-        .first()
-        .extracting(BoardResponse::getId)
-        .isEqualTo(boardId);
+      .hasSize(1)
+      .first()
+      .extracting(BoardResponse::getId)
+      .isEqualTo(boardId);
   }
 
   @Test
@@ -169,17 +168,17 @@ class BoardMapperTest {
 
     // Then
     assertThat(entity)
-        .isNotNull()
-        .extracting(
-            Board::getTitle,
-            Board::getBoardType,
-            Board::getDescription,
-            Board::isVisible)
-        .containsExactly(
-            "New Board",
-            BoardType.STUDY,
-            "New Description",
-            false);
+      .isNotNull()
+      .extracting(
+        Board::getTitle,
+        Board::getBoardType,
+        Board::getDescription,
+        Board::isVisible)
+      .containsExactly(
+        "New Board",
+        BoardType.STUDY,
+        "New Description",
+        false);
 
     // Collections should be empty as they're ignored in the mapping
     assertThat(entity.getOwners()).isEmpty();
@@ -219,8 +218,8 @@ class BoardMapperTest {
 
     // Then
     assertThat(ownerIds)
-        .hasSize(1)
-        .contains(owner.getId());
+      .hasSize(1)
+      .contains(owner.getId());
   }
 
   @Test
@@ -230,8 +229,8 @@ class BoardMapperTest {
 
     // Then
     assertThat(memberIds)
-        .hasSize(1)
-        .contains(member.getId());
+      .hasSize(1)
+      .contains(member.getId());
   }
 
   @Test
@@ -241,8 +240,8 @@ class BoardMapperTest {
 
     // Then
     assertThat(boardItemIds)
-        .hasSize(1)
-        .contains(boardItem.getId());
+      .hasSize(1)
+      .contains(boardItem.getId());
   }
 
   @Test
@@ -252,8 +251,8 @@ class BoardMapperTest {
 
     // Then
     assertThat(roleIds)
-        .hasSize(1)
-        .contains(role.getId());
+      .hasSize(1)
+      .contains(role.getId());
   }
 
   @Test
@@ -263,7 +262,7 @@ class BoardMapperTest {
 
     // Then
     assertThat(skillIds)
-        .hasSize(1)
-        .contains(skill.getId());
+      .hasSize(1)
+      .contains(skill.getId());
   }
 }
