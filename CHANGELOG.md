@@ -1,3 +1,10 @@
+## [1.6.3](https://github.com/SaundersCox/taskolotl-backend/compare/v1.6.2...v1.6.3) (2025-09-07)
+
+
+### Bug Fixes
+
+* **readme:** Updated readme with code guidelines, fixed tests, formatted ([ccbfa8e](https://github.com/SaundersCox/taskolotl-backend/commit/ccbfa8e388fc8a0aea060b0111fe9ca871389a34))
+
 ## [1.6.2](https://github.com/SaundersCox/taskolotl-backend/compare/v1.6.1...v1.6.2) (2025-09-04)
 
 
